@@ -1,0 +1,70 @@
+/* ==========================================================================
+   TimeWise — insights screen
+   Builds on styles.css + dashboard.css (shared app shell).
+   ========================================================================== */
+
+.insight-range { display: flex; width: fit-content; gap: 4px; margin: -8px 0 22px; padding: 4px; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+.insight-range button { border: 0; border-radius: 8px; padding: 7px 15px; background: transparent; color: var(--muted); font-size: .78rem; font-weight: 600; cursor: pointer; }
+.insight-range button:hover { color: var(--ink); }
+.insight-range button.active { background: var(--accent); color: #fff; }
+
+.insights-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: start; }
+.insight-panel { min-height: 280px; }
+
+/* Completion donut */
+.donut-wrap { display: flex; align-items: center; justify-content: center; gap: 34px; padding: 8px 0 4px; }
+.donut { position: relative; width: 150px; height: 150px; flex: none; }
+.donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.donut-track, .donut-value { fill: none; stroke-width: 10; }
+.donut-track { stroke: #e2e8f0; }
+.donut-value { stroke: var(--accent); stroke-linecap: round; transition: stroke-dasharray .35s ease; }
+.donut-label { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.donut-label strong { display: block; font-family: var(--font-display); font-size: 1.7rem; line-height: 1.1; }
+.donut-label span { font-size: .72rem; color: var(--muted); }
+
+.legend { list-style: none; margin: 0; padding: 0; min-width: 150px; }
+.legend li { display: flex; align-items: center; gap: 9px; padding: 9px 0; border-top: 1px solid #f1f5f9; font-size: .84rem; color: var(--ink-soft); }
+.legend li:first-child { border-top: 0; }
+.legend li strong { margin-left: auto; font-size: .92rem; color: var(--ink); }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.legend-dot.done { background: var(--accent); }
+.legend-dot.open { background: #e2e8f0; }
+
+/* Horizontal bar lists */
+.bar-list { list-style: none; margin: 0; padding: 0; }
+.bar-row { padding: 10px 0; border-top: 1px solid #f1f5f9; }
+.bar-row:first-child { border-top: 0; }
+.bar-row-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; font-size: .82rem; }
+.bar-row-head strong { font-size: .78rem; color: var(--muted); }
+.bar-track { height: 8px; border-radius: 99px; background: #f1f5f9; overflow: hidden; }
+.bar-fill { display: block; height: 100%; width: 0; border-radius: 99px; background: #99f6e4; transition: width .35s ease; }
+.bar-row.high .bar-fill { background: #f87171; }
+.bar-row.medium .bar-fill { background: var(--amber); }
+.bar-row.low .bar-fill { background: #94a3b8; }
+.bar-row.tag .bar-fill { background: #60a5fa; }
+
+/* Vertical weekday bars */
+.bar-chart { min-height: 180px; }
+#weekday-chart .bar { background: #99f6e4; }
+#weekday-chart .today .bar { background: var(--accent); }
+
+/* Focus sessions */
+.focus-insight { grid-column: 1 / -1; min-height: 0; }
+.focus-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.focus-summary > div { padding: 14px; border-radius: 12px; background: var(--surface-soft); }
+.focus-summary span { display: block; font-size: .72rem; color: var(--muted); }
+.focus-summary strong { display: block; margin-top: 4px; font-family: var(--font-display); font-size: 1.18rem; }
+#focus-task-list .bar-fill { background: #8b5cf6; }
+
+@media (max-width: 1080px) {
+  .insights-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .donut-wrap { gap: 18px; }
+  .donut { width: 120px; height: 120px; }
+  .stat-grid { grid-template-columns: 1fr; }
+  .insight-range { width: 100%; }
+  .insight-range button { flex: 1; padding: 8px 6px; }
+}

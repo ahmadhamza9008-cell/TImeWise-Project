@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Privacy Policy for TimeWise.">
+  <meta name="theme-color" content="#0f172a">
+  <title>Privacy Policy — TimeWise</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/auth.css">
+  <style>
+    .legal-main { max-width: 760px; margin: 0 auto; padding: 48px 20px 80px; color: var(--ink); }
+    .legal-main h1 { font-family: var(--font-display); font-size: 2rem; margin-bottom: 8px; }
+    .legal-main .lede { color: var(--muted); margin-bottom: 32px; }
+    .legal-main h2 { font-family: var(--font-display); font-size: 1.15rem; margin: 28px 0 8px; }
+    .legal-main p, .legal-main li { line-height: 1.7; font-size: .94rem; }
+    .legal-main ul { padding-left: 20px; }
+    .legal-main a { color: var(--accent); }
+    .legal-back { display: inline-block; margin-bottom: 20px; font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <main class="legal-main">
+    <a class="legal-back" href="index.html">&larr; Back to TimeWise</a>
+    <h1>Privacy Policy</h1>
+    <p class="lede">Version 1.0 — last updated 21 November 2026.</p>
+
+    <p>This policy explains what TimeWise stores, why, and the choices you have. It applies to the website, the installable PWA, and the Android wrapper.</p>
+
+    <h2>1. What we store</h2>
+    <ul>
+      <li><strong>Account details</strong> — email address, display name, and password hash, handled by Supabase Auth.</li>
+      <li><strong>Tasks</strong> — titles, times, due dates, categories, priorities, notes, and completion state.</li>
+      <li><strong>Preferences</strong> — display name, focus-session length, and week-start day.</li>
+      <li><strong>Push subscriptions</strong> — the browser endpoint and encryption keys needed to deliver reminders, plus your timezone.</li>
+      <li><strong>Waitlist emails</strong> — only if you submit the early-access form on the landing page.</li>
+    </ul>
+
+    <h2>2. Where it lives</h2>
+    <p>When you are signed in, tasks and profile preferences are stored in Supabase with row-level security so only your account can read or change them. On this device, a local copy is kept in browser storage so the app works offline and in local-demo mode. Push subscriptions are stored in Supabase only.</p>
+
+    <h2>3. Why we use it</h2>
+    <p>We use your data to show your plan, sync it across your devices, and — if you enable notifications — send a reminder about a task due soon. We do not sell your data. There is no advertising or behavioural tracking in TimeWise.</p>
+
+    <h2>4. Third parties</h2>
+    <ul>
+      <li><strong>Supabase</strong> hosts authentication, the database, and the reminder function.</li>
+      <li><strong>Google / GitHub</strong> are used only if you choose those sign-in options; their own privacy policies apply to that step.</li>
+      <li><strong>Google Fonts</strong> supplies the typefaces, and the Supabase JavaScript library is loaded from a public CDN.</li>
+    </ul>
+
+    <h2>5. Your choices</h2>
+    <p>Settings → Your data lets you export tasks as CSV, clear completed tasks, and reset local data. Disabling notifications removes your push subscription. To delete your account and its data, use your Supabase account settings or contact us.</p>
+
+    <h2>6. Children</h2>
+    <p>TimeWise is not intended for children under 13, and we don't knowingly collect their information.</p>
+
+    <h2>7. Changes and contact</h2>
+    <p>We'll update this page when the app's data practices change. Questions can go to <a href="mailto:hello@timewise.app">hello@timewise.app</a>.</p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Your TimeWise profile, preferences, and data.">
+  <meta name="theme-color" content="#0f172a">
+  <title>Settings — TimeWise</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <link rel="stylesheet" href="assets/css/notifications.css">
+  <link rel="stylesheet" href="assets/css/settings.css">
+</head>
+<body class="dashboard-page">
+  <svg class="svg-sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+    <symbol id="i-tasks" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10m5 10V4m5 16v-7m5 7V8"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h10m4 0h2M4 17h2m4 0h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 19h16"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
+  </svg>
+
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="sidebar-head">
+        <a class="brand" href="index.html" aria-label="TimeWise home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="11" stroke="currentColor" stroke-width="3"/><path d="M16 9v8l5 3" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="brand-name">TimeWise</span>
+        </a>
+        <button class="sidebar-close" id="sidebar-close" type="button" aria-label="Close navigation">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </div>
+
+      <nav class="side-nav">
+        <p class="side-label">Workspace</p>
+        <a class="side-link" href="dashboard.html">
+          <svg class="icon" aria-hidden="true"><use href="#i-grid"></use></svg><span>Overview</span>
+        </a>
+        <a class="side-link" href="tasks.html">
+          <svg class="icon" aria-hidden="true"><use href="#i-tasks"></use></svg><span>Tasks</span>
+        </a>
+        <a class="side-link" href="calendar.html">
+          <svg class="icon" aria-hidden="true"><use href="#i-calendar"></use></svg><span>Calendar</span>
+        </a>
+        <a class="side-link" href="insights.html">
+          <svg class="icon" aria-hidden="true"><use href="#i-chart"></use></svg><span>Insights</span>
+        </a>
+
+        <p class="side-label side-label-gap">Account</p>
+        <a class="side-link active" href="settings.html" aria-current="page">
+          <svg class="icon" aria-hidden="true"><use href="#i-settings"></use></svg><span>Settings</span>
+        </a>
+        <a class="side-link" href="index.html">
+          <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg><span>Back to website</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="user-card">
+          <span class="user-avatar">A</span>
+          <span class="user-info"><strong>Ahmad Hamza</strong><small>Early access</small></span>
+        </div>
+        <button class="sign-out" id="sign-out-btn" type="button" hidden>Sign out</button>
+      </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebar-overlay" hidden></div>
+
+    <div class="app-content">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" id="menu-btn" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
+          <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
+        </button>
+        <div class="topbar-title"><span>Workspace</span><strong>Settings</strong></div>
+        <label class="topbar-search" for="settings-search">
+          <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+          <input id="settings-search" type="search" placeholder="Search settings" aria-label="Search settings">
+        </label>
+        <div class="topbar-actions">
+          <span class="backend-badge" id="backend-status" data-state="local">Local demo</span>
+          <button class="icon-btn" id="notification-btn" type="button" aria-label="Notifications">
+            <svg class="icon" aria-hidden="true"><use href="#i-bell"></use></svg>
+            <span class="notification-dot" aria-hidden="true"></span>
+          </button>
+          <span class="topbar-avatar" aria-label="Ahmad Hamza">A</span>
+        </div>
+      </header>
+
+      <main class="dashboard-main">
+        <div class="page-heading">
+          <div>
+            <h1>Settings</h1>
+            <p>Make TimeWise work the way you do.</p>
+          </div>
+          <div class="page-heading-actions">
+            <a class="btn btn-ghost btn-sm" href="dashboard.html">
+              <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg> Back to dashboard
+            </a>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <div class="settings-stack">
+            <section class="panel" aria-labelledby="profile-title">
+              <div class="panel-head">
+                <div><h2 id="profile-title">Profile</h2><p>Your name appears across the app.</p></div>
+              </div>
+              <div class="profile-row">
+                <span class="avatar-preview" id="avatar-preview" aria-hidden="true">A</span>
+                <form class="profile-form" id="profile-form">
+                  <label for="profile-name">Display name</label>
+                  <div class="profile-input-row">
+                    <input id="profile-name" name="name" type="text" maxlength="60" autocomplete="name" required>
+                    <button class="btn btn-primary btn-sm" type="submit">Save</button>
+                  </div>
+                  <p class="field-hint" id="profile-email">Saved on this device.</p>
+                </form>
+              </div>
+            </section>
+
+            <section class="panel" aria-labelledby="preferences-title">
+              <div class="panel-head">
+                <div><h2 id="preferences-title">Preferences</h2><p>Changes apply immediately.</p></div>
+              </div>
+
+              <fieldset class="setting-group">
+                <legend>Default focus session</legend>
+                <div class="radio-cards">
+                  <label class="radio-card">
+                    <input type="radio" name="focus" value="25">
+                    <span><strong>25 minutes</strong><small>Classic Pomodoro</small></span>
+                  </label>
+                  <label class="radio-card">
+                    <input type="radio" name="focus" value="50">
+                    <span><strong>50 minutes</strong><small>Deep work block</small></span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset class="setting-group">
+                <legend>Appearance</legend>
+                <div class="radio-cards">
+                  <label class="radio-card">
+                    <input type="radio" name="theme" value="light">
+                    <span><strong>Light</strong><small>Default bright theme</small></span>
+                  </label>
+                  <label class="radio-card">
+                    <input type="radio" name="theme" value="dark">
+                    <span><strong>Dark</strong><small>Easier on the eyes</small></span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <div class="setting-group">
+                <label for="week-start">Week starts on</label>
+                <select id="week-start">
+                  <option value="monday">Monday</option>
+                  <option value="sunday">Sunday</option>
+                </select>
+                <p class="field-hint">Used by the Calendar and Insights week views.</p>
+              </div>
+            </section>
+
+            <section class="panel" aria-labelledby="data-title">
+              <div class="panel-head">
+                <div><h2 id="data-title">Your data</h2><p>Tasks are stored on this device or synced to Supabase.</p></div>
+                <span class="data-count" id="data-count">0 tasks</span>
+              </div>
+              <div class="data-actions">
+                <button class="btn btn-ghost btn-sm" type="button" id="export-btn">
+                  <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg> Export CSV
+                </button>
+                <button class="btn btn-ghost btn-sm" type="button" id="clear-completed-btn">
+                  <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg> Clear completed
+                </button>
+                <button class="btn btn-danger btn-sm" type="button" id="reset-data-btn">
+                  <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg> Reset local data
+                </button>
+              </div>
+              <p class="field-hint">Reset restores the demo tasks. Your preferences are kept.</p>
+            </section>
+          </div>
+
+          <aside class="settings-stack">
+            <section class="panel" aria-labelledby="account-title">
+              <div class="panel-head">
+                <div><h2 id="account-title">Account</h2><p>Backend connection status.</p></div>
+              </div>
+              <p class="connection-text" id="connection-text">Local demo — tasks are saved on this device.</p>
+              <button class="btn btn-ghost btn-block" type="button" id="settings-sign-out" hidden>Sign out</button>
+            </section>
+
+            <section class="panel" aria-labelledby="push-title">
+              <div class="panel-head">
+                <div><h2 id="push-title">Notifications</h2><p>Reminders for tasks due soon.</p></div>
+              </div>
+              <p class="connection-text" id="push-status">Checking notification support…</p>
+              <button class="btn btn-primary btn-block" type="button" id="push-toggle" hidden>Enable notifications</button>
+              <p class="field-hint" id="push-hint" hidden>Alerts arrive at the lead time set on each task.</p>
+            </section>
+
+            <section class="panel about-panel" aria-labelledby="about-title">
+              <div class="panel-head">
+                <div><h2 id="about-title">About</h2><p>Version and support.</p></div>
+              </div>
+              <p class="about-line"><strong>TimeWise</strong> <span>Version 1.0</span></p>
+              <p class="field-hint">Built with plain HTML, CSS, and JavaScript. Your data stays yours.</p>
+            </section>
+          </aside>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/config.js" defer></script>
+  <script src="assets/js/supabase.js" defer></script>
+  <script src="assets/js/store.js" defer></script>
+  <script src="assets/js/settings.js" defer></script>
+  <script src="assets/js/app-status.js" defer></script>
+  <script src="assets/js/app-settings.js" defer></script>
+  <script src="assets/js/notifications.js" defer></script>
+  <script src="assets/js/push.js" defer></script>
+  <script src="assets/js/settings-page.js" defer></script>
+  <script src="assets/js/pwa.js" defer></script>
+</body>
+</html>

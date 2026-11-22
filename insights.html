@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Understand your TimeWise task patterns and progress.">
+  <meta name="theme-color" content="#0f172a">
+  <title>Insights — TimeWise</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <link rel="stylesheet" href="assets/css/notifications.css">
+  <link rel="stylesheet" href="assets/css/insights.css">
+</head>
+<body class="dashboard-page">
+  <svg class="svg-sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+    <symbol id="i-tasks" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3 6 1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10m5 10V4m5 16v-7m5 7V8"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h10m4 0h2M4 17h2m4 0h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3s6 5 6 11a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3 0-5 1-8Z"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 13l9 5 9-5M3 17l9 5 9-5"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 19h16"/></symbol>
+  </svg>
+
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <div class="sidebar-head">
+        <a class="brand" href="index.html" aria-label="TimeWise home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="11" stroke="currentColor" stroke-width="3"/><path d="M16 9v8l5 3" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="brand-name">TimeWise</span>
+        </a>
+        <button class="sidebar-close" id="sidebar-close" type="button" aria-label="Close navigation">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </div>
+
+      <nav class="side-nav">
+        <p class="side-label">Workspace</p>
+        <a class="side-link" href="dashboard.html">
+          <svg class="icon" aria-hidden="true"><use href="#i-grid"></use></svg><span>Overview</span>
+        </a>
+        <a class="side-link" href="tasks.html">
+          <svg class="icon" aria-hidden="true"><use href="#i-tasks"></use></svg><span>Tasks</span>
+        </a>
+        <a class="side-link" href="calendar.html">
+          <svg class="icon" aria-hidden="true"><use href="#i-calendar"></use></svg><span>Calendar</span>
+        </a>
+        <a class="side-link active" href="insights.html" aria-current="page">
+          <svg class="icon" aria-hidden="true"><use href="#i-chart"></use></svg><span>Insights</span>
+        </a>
+
+        <p class="side-label side-label-gap">Account</p>
+        <a class="side-link" href="settings.html">
+          <svg class="icon" aria-hidden="true"><use href="#i-settings"></use></svg><span>Settings</span>
+        </a>
+        <a class="side-link" href="index.html">
+          <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg><span>Back to website</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="user-card">
+          <span class="user-avatar">A</span>
+          <span class="user-info"><strong>Ahmad Hamza </strong><small>Early access</small></span>
+        </div>
+        <button class="sign-out" id="sign-out-btn" type="button" hidden>Sign out</button>
+      </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebar-overlay" hidden></div>
+
+    <div class="app-content">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" id="menu-btn" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
+          <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
+        </button>
+        <div class="topbar-title"><span>Workspace</span><strong>Insights</strong></div>
+        <label class="topbar-search">
+          <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+          <input id="task-search" type="search" placeholder="Filter tasks" aria-label="Filter tasks">
+        </label>
+        <div class="topbar-actions">
+          <span class="backend-badge" id="backend-status" data-state="local">Local demo</span>
+          <button class="icon-btn" id="notification-btn" type="button" aria-label="Notifications">
+            <svg class="icon" aria-hidden="true"><use href="#i-bell"></use></svg>
+            <span class="notification-dot" aria-hidden="true"></span>
+          </button>
+          <span class="topbar-avatar" aria-label="Ahmad Hamza">A</span>
+        </div>
+      </header>
+
+      <main class="dashboard-main">
+        <div class="page-heading">
+          <div>
+            <h1>Insights</h1>
+            <p>Understand your progress from the tasks you track.</p>
+          </div>
+          <div class="page-heading-actions">
+            <button class="btn btn-ghost btn-sm" type="button" id="export-btn">
+              <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg> Export CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="insight-range" role="group" aria-label="Date range">
+          <button type="button" data-range="all" class="active" aria-pressed="true">All time</button>
+          <button type="button" data-range="week" aria-pressed="false">This week</button>
+          <button type="button" data-range="month" aria-pressed="false">This month</button>
+        </div>
+
+        <section class="stat-grid" aria-label="Insights summary">
+          <article class="stat-card">
+            <span class="stat-icon teal"><svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg></span>
+            <div class="stat-text"><span>Total tasks</span><strong id="stat-total">0</strong><small id="stat-total-note">In this range</small></div>
+          </article>
+          <article class="stat-card">
+            <span class="stat-icon blue"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+            <div class="stat-text"><span>Completed</span><strong id="stat-done">0</strong><small id="stat-done-note">Nice work</small></div>
+          </article>
+          <article class="stat-card">
+            <span class="stat-icon amber"><svg class="icon" aria-hidden="true"><use href="#i-flame"></use></svg></span>
+            <div class="stat-text"><span>Completion rate</span><strong id="stat-rate">0%</strong><small id="stat-rate-note">Keep it up</small></div>
+          </article>
+          <article class="stat-card">
+            <span class="stat-icon violet"><svg class="icon" aria-hidden="true"><use href="#i-target"></use></svg></span>
+            <div class="stat-text"><span>Still to do</span><strong id="stat-open">0</strong><small id="stat-open-note">Open tasks</small></div>
+          </article>
+        </section>
+
+        <p class="empty-state" id="insights-empty" hidden>No tasks match this range. Try “All time” or add a task first.</p>
+
+        <div class="insights-grid">
+          <section class="panel insight-panel" aria-labelledby="completion-title">
+            <div class="panel-head">
+              <div><h2 id="completion-title">Completion</h2><p>Done versus still open.</p></div>
+            </div>
+            <div class="donut-wrap">
+              <div class="donut">
+                <svg viewBox="0 0 120 120" aria-hidden="true">
+                  <circle class="donut-track" cx="60" cy="60" r="46"></circle>
+                  <circle class="donut-value" id="donut-value" cx="60" cy="60" r="46"></circle>
+                </svg>
+                <div class="donut-label"><strong id="donut-percent">0%</strong><span>complete</span></div>
+              </div>
+              <ul class="legend">
+                <li><span class="legend-dot done"></span><span>Completed</span><strong id="legend-done">0</strong></li>
+                <li><span class="legend-dot open"></span><span>Still open</span><strong id="legend-open">0</strong></li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="panel insight-panel" aria-labelledby="priority-title">
+            <div class="panel-head">
+              <div><h2 id="priority-title">By priority</h2><p>Where your effort is going.</p></div>
+            </div>
+            <ul class="bar-list" id="priority-list"></ul>
+          </section>
+
+          <section class="panel insight-panel" aria-labelledby="weekday-title">
+            <div class="panel-head">
+              <div><h2 id="weekday-title">This week</h2><p>Tasks due on each day.</p></div>
+              <span class="week-total" id="week-total">0 tasks</span>
+            </div>
+            <div class="bar-chart" id="weekday-chart" role="img" aria-label="Tasks due by weekday"></div>
+          </section>
+
+          <section class="panel insight-panel" aria-labelledby="tag-title">
+            <div class="panel-head">
+              <div><h2 id="tag-title">Top categories</h2><p>Your most common tags.</p></div>
+            </div>
+            <ul class="bar-list" id="tag-list"></ul>
+          </section>
+
+          <section class="panel insight-panel focus-insight" aria-labelledby="focus-title">
+            <div class="panel-head">
+              <div><h2 id="focus-title">Focus sessions</h2><p>Time spent in the focus timer.</p></div>
+            </div>
+            <div class="focus-summary">
+              <div><span>Total focus</span><strong id="focus-total">0m</strong></div>
+              <div><span>Sessions</span><strong id="focus-sessions">0</strong></div>
+              <div><span>Average</span><strong id="focus-average">0m</strong></div>
+            </div>
+            <p class="field-hint" id="focus-empty" hidden>No focus sessions in this range yet. Start the timer on the dashboard.</p>
+            <ul class="bar-list" id="focus-task-list"></ul>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/config.js" defer></script>
+  <script src="assets/js/supabase.js" defer></script>
+  <script src="assets/js/store.js" defer></script>
+  <script src="assets/js/settings.js" defer></script>
+  <script src="assets/js/app-status.js" defer></script>
+  <script src="assets/js/app-settings.js" defer></script>
+  <script src="assets/js/notifications.js" defer></script>
+  <script src="assets/js/insights.js" defer></script>
+  <script src="assets/js/pwa.js" defer></script>
+</body>
+</html>

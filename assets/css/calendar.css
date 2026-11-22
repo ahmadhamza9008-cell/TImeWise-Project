@@ -1,0 +1,123 @@
+/* ==========================================================================
+   TimeWise — calendar screen
+   Builds on styles.css + dashboard.css (shared app shell).
+   ========================================================================== */
+
+.calendar-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, .8fr); gap: 22px; align-items: start; }
+.calendar-panel { min-width: 0; padding-bottom: 18px; }
+
+/* Toolbar */
+.calendar-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.calendar-nav { display: flex; align-items: center; gap: 10px; }
+.calendar-nav .icon-btn { width: 38px; height: 38px; }
+.calendar-nav h2 { min-width: 170px; text-align: center; font-size: 1.15rem; }
+
+/* Grid */
+.calendar-weekdays,
+.calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.calendar-weekdays { border-bottom: 1px solid var(--line); margin-bottom: -1px; }
+.calendar-weekdays span { padding: 10px 4px; text-align: center; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+.calendar-grid { border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.calendar-day {
+  position: relative;
+  min-height: 116px;
+  padding: 8px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: background .15s ease, box-shadow .15s ease;
+  overflow: hidden;
+}
+.calendar-day:hover { background: var(--surface-soft); }
+.calendar-day.other-month { background: #fafbfc; color: #94a3b8; }
+.calendar-day.selected { box-shadow: inset 0 0 0 2px var(--accent); background: #f0fdfa; }
+.day-number {
+  display: inline-grid;
+  place-items: center;
+  width: 24px; height: 24px;
+  border-radius: 7px;
+  font-size: .78rem;
+  font-weight: 600;
+}
+.calendar-day.today .day-number { background: var(--accent); color: #fff; }
+.calendar-day.other-month .day-number { opacity: .55; }
+
+.day-chips { display: grid; gap: 3px; margin-top: 6px; }
+.task-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: var(--accent-light);
+  color: var(--accent-dark);
+  font-size: .66rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.task-chip.done { opacity: .55; text-decoration: line-through; }
+.task-chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--accent); }
+.task-chip.high .chip-dot { background: #ef4444; }
+.task-chip.medium .chip-dot { background: var(--amber); }
+.task-chip.low .chip-dot { background: #94a3b8; }
+.task-chip .chip-title { overflow: hidden; text-overflow: ellipsis; }
+.more-chip { font-size: .64rem; color: var(--muted); padding-left: 4px; }
+
+/* Selected day panel */
+.day-panel { position: sticky; top: 96px; }
+.day-task-list { list-style: none; margin: 0 0 14px; padding: 0; }
+.day-task-item { display: flex; align-items: flex-start; gap: 10px; padding: 11px 0; border-top: 1px solid #f1f5f9; }
+.day-task-item:first-child { border-top: 0; }
+.day-check {
+  display: grid;
+  place-items: center;
+  width: 19px; height: 19px;
+  flex: none;
+  margin-top: 2px;
+  padding: 0;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #fff;
+  cursor: pointer;
+}
+.day-check svg { width: 13px; height: 13px; opacity: 0; }
+.day-task-item.done .day-check { background: var(--accent); border-color: var(--accent); }
+.day-task-item.done .day-check svg { opacity: 1; }
+.day-task-body { min-width: 0; flex: 1; }
+.day-task-title { display: block; font-size: .86rem; font-weight: 600; }
+.day-task-item.done .day-task-title { text-decoration: line-through; color: #94a3b8; }
+.day-task-meta { display: flex; gap: 8px; margin-top: 2px; font-size: .7rem; color: var(--muted); }
+
+.day-add { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.day-add input {
+  flex: 1 1 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: .86rem;
+}
+.day-add input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(13, 148, 136, .12); }
+.day-add select { min-height: 40px; border: 1px solid var(--line); border-radius: 9px; padding: 0 8px; font-size: .8rem; background: #fff; }
+.day-add .btn { flex: 1; }
+.day-manage { margin-top: 16px; }
+
+/* Responsive */
+@media (max-width: 1120px) {
+  .calendar-layout { grid-template-columns: 1fr; }
+  .day-panel { position: static; }
+}
+
+@media (max-width: 640px) {
+  .calendar-day { min-height: 78px; padding: 5px; }
+  .task-chip { padding: 2px 4px; font-size: .6rem; }
+  .task-chip .chip-title { display: none; }
+  .calendar-nav h2 { min-width: 140px; font-size: 1rem; }
+  .calendar-weekdays span { font-size: .62rem; }
+}

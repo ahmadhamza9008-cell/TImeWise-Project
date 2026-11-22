@@ -1,0 +1,54 @@
+/* ==========================================================================
+   TimeWise — notification center (shared by all app screens)
+   ========================================================================== */
+
+.topbar-actions { position: relative; }
+
+.notifications-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 80;
+  width: min(360px, calc(100vw - 32px));
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity .16s ease, transform .16s ease;
+}
+.notifications-panel.is-open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+.notifications-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px 10px; border-bottom: 1px solid #f1f5f9; }
+.notifications-head strong { font-family: var(--font-display); font-size: .95rem; }
+.notifications-head span { font-size: .72rem; color: var(--muted); }
+
+.notifications-list { list-style: none; max-height: 340px; margin: 0; padding: 4px 0; overflow-y: auto; }
+.notification-item { display: flex; gap: 10px; padding: 10px; border-radius: 10px; text-decoration: none; color: inherit; }
+.notification-item:hover { background: var(--surface-soft); }
+.notification-icon { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 9px; background: var(--accent-light); color: var(--accent-dark); font-size: .85rem; }
+.notification-item.overdue .notification-icon { background: #fee2e2; color: #b91c1c; }
+.notification-item.later .notification-icon { background: #dbeafe; color: #1d4ed8; }
+.notification-body { min-width: 0; flex: 1; }
+.notification-body strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .84rem; }
+.notification-body small { display: block; margin-top: 2px; font-size: .73rem; color: var(--muted); }
+.notification-row { display: flex; align-items: center; gap: 4px; }
+.notification-row .notification-item { flex: 1; min-width: 0; }
+.notification-snooze {
+  flex: none;
+  width: 32px; height: 32px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-size: .85rem;
+  cursor: pointer;
+  opacity: .6;
+}
+.notification-row:hover .notification-snooze, .notification-snooze:focus-visible { opacity: 1; background: var(--surface-soft); }
+.notifications-empty { padding: 26px 10px; text-align: center; color: var(--muted); font-size: .84rem; }
+.notifications-foot { display: block; padding: 10px; border-top: 1px solid #f1f5f9; text-align: center; color: var(--accent); font-size: .8rem; font-weight: 600; text-decoration: none; }
+.notifications-foot:hover { text-decoration: underline; }

@@ -1,0 +1,231 @@
+/* ==========================================================================
+   TimeWise — task management screen
+   Builds on styles.css + dashboard.css (shared app shell and task rows).
+   ========================================================================== */
+
+.tasks-layout { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(300px, .85fr); gap: 22px; align-items: start; }
+.tasks-side { display: grid; gap: 22px; }
+.tasks-panel { min-width: 0; }
+
+/* --------------------------------------------------------------------------
+   Toolbar
+   -------------------------------------------------------------------------- */
+.task-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.filter-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 10px; background: var(--surface-soft); }
+.filter-tabs button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--muted);
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .16s ease, color .16s ease;
+}
+.filter-tabs button:hover { color: var(--ink); }
+.filter-tabs button.active { background: #fff; color: var(--ink); box-shadow: var(--shadow-sm); }
+
+.toolbar-selects { display: flex; gap: 8px; }
+.toolbar-selects select,
+.compose-panel select,
+.compose-panel input,
+.compose-panel textarea {
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font-size: .84rem;
+}
+.toolbar-selects select { cursor: pointer; }
+.toolbar-selects select:focus,
+.compose-panel input:focus,
+.compose-panel select:focus,
+.compose-panel textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, .12);
+}
+
+.list-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 2px 8px; font-size: .78rem; color: var(--muted); }
+.list-heading button { border: 0; background: transparent; font-size: .78rem; cursor: pointer; }
+
+/* --------------------------------------------------------------------------
+   Task rows
+   -------------------------------------------------------------------------- */
+.task-row { align-items: flex-start; padding: 15px 4px; }
+.task-row .task-main { padding-top: 1px; }
+.task-row .task-actions { display: flex; gap: 2px; }
+.task-row .task-edit,
+.task-row .task-delete {
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  opacity: .6;
+  transition: opacity .15s ease, color .15s ease;
+}
+.task-row:hover .task-edit,
+.task-row:hover .task-delete,
+.task-row .task-edit:focus-visible,
+.task-row .task-delete:focus-visible { opacity: 1; }
+.task-row .task-edit:hover { color: var(--accent); }
+.task-row .task-delete:hover { color: #ef4444; }
+.task-row .task-edit .icon,
+.task-row .task-delete .icon { width: 16px; height: 16px; }
+
+.task-meta { flex-wrap: wrap; }
+.priority-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: .66rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.priority-badge.high { background: #fee2e2; color: #b91c1c; }
+.priority-badge.medium { background: #fef3c7; color: #b45309; }
+.priority-badge.low { background: #e2e8f0; color: #475569; }
+.due-label.overdue { color: #dc2626; font-weight: 600; }
+.repeat-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-light);
+  color: var(--accent-dark);
+  font-size: .66rem;
+  font-weight: 700;
+}
+.subtask-progress,
+.snooze-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: .66rem;
+  font-weight: 700;
+}
+.snooze-badge { background: #fef3c7; color: #b45309; }
+.subtask-checklist {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0 0 0 2px;
+  display: grid;
+  gap: 4px;
+}
+.subtask-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .78rem;
+  color: var(--muted);
+}
+.subtask-check {
+  width: 16px; height: 16px;
+  flex: none;
+  border: 1.5px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+  color: #fff;
+  font-size: .65rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+.subtask-check.done { background: var(--accent); border-color: var(--accent); }
+.subtask-checklist li:has(.done) span { text-decoration: line-through; opacity: .7; }
+.task-snooze {
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  font-size: .85rem;
+  opacity: .6;
+}
+.task-row:hover .task-snooze, .task-snooze:focus-visible { opacity: 1; }
+.subtask-editor { display: grid; gap: 6px; margin-bottom: 8px; }
+.subtask-input-row { display: flex; gap: 6px; }
+.subtask-input-row .subtask-title { flex: 1; min-width: 0; }
+.subtask-remove {
+  width: 38px;
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  cursor: pointer;
+}
+.task-notes {
+  margin: 6px 0 0;
+  font-size: .78rem;
+  color: var(--muted);
+  line-height: 1.5;
+  max-width: 65ch;
+}
+.task-item.done .task-notes { opacity: .6; }
+
+/* --------------------------------------------------------------------------
+   Compose form
+   -------------------------------------------------------------------------- */
+.compose-panel .panel-head { margin-bottom: 20px; }
+.compose-panel .field { margin-bottom: 14px; }
+.compose-panel .field label,
+.tasks-side label:not(.sr-only) {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.optional { font-weight: 400; color: var(--muted); font-size: .72rem; }
+.compose-panel input,
+.compose-panel select { width: 100%; }
+.compose-panel textarea { width: 100%; resize: vertical; min-height: 76px; line-height: 1.5; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-actions { display: flex; gap: 10px; margin-top: 6px; }
+.form-actions .btn { flex: 1; min-height: 44px; }
+.compose-panel .field-error { margin-top: 4px; }
+.field-hint { margin: 8px 0 0; font-size: .74rem; color: var(--muted); }
+
+/* --------------------------------------------------------------------------
+   Summary
+   -------------------------------------------------------------------------- */
+.summary-numbers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+.summary-numbers div { text-align: center; padding: 12px 6px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); }
+.summary-numbers strong { display: block; font-family: var(--font-display); font-size: 1.35rem; }
+.summary-numbers span { display: block; font-size: .68rem; color: var(--muted); margin-top: 2px; }
+.progress-track { height: 8px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+.progress-track span { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--accent); transition: width .3s ease; }
+.summary-caption { margin-top: 10px; font-size: .76rem; color: var(--muted); }
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 1120px) {
+  .tasks-layout { grid-template-columns: 1fr; }
+  .tasks-side { grid-template-columns: 1fr 1fr; align-items: start; }
+}
+
+@media (max-width: 760px) {
+  .tasks-side { grid-template-columns: 1fr; }
+  .toolbar-selects { width: 100%; }
+  .toolbar-selects select { flex: 1; }
+  .form-row { grid-template-columns: 1fr; }
+  .task-notes { max-width: none; }
+}
+
+@media (max-width: 560px) {
+  .filter-tabs { width: 100%; }
+  .filter-tabs button { flex: 1; padding: 8px 6px; }
+  .summary-numbers { gap: 8px; }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "timewise",
+  "version": "1.1.0",
+  "private": true,
+  "description": "TimeWise — web app with a Capacitor Android wrapper",
+  "scripts": {
+    "web:sync": "node scripts/sync-web.js",
+    "assets:native": "python3 scripts/generate-native-assets.py",
+    "vapid:keys": "node scripts/generate-vapid.js",
+    "cap:sync": "node scripts/sync-web.js && cap sync",
+    "cap:add:android": "node scripts/sync-web.js && cap add android",
+    "cap:open:android": "cap open android",
+    "cap:build:android": "node scripts/sync-web.js && cap build android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/core": "^6.2.1",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.1"
+  }
+}

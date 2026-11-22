@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Choose a new password for your TimeWise account.">
+  <meta name="theme-color" content="#0f172a">
+  <title>Reset password — TimeWise</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/auth.css">
+</head>
+<body>
+  <div class="auth-shell">
+    <aside class="auth-aside" aria-label="About TimeWise">
+      <a class="brand" href="index.html" aria-label="TimeWise home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="11" stroke="currentColor" stroke-width="3"/><path d="M16 9v8l5 3" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="brand-name">TimeWise</span>
+      </a>
+
+      <div class="aside-content">
+        <p class="eyebrow">Account security</p>
+        <h2>Almost there.</h2>
+        <p>Choose a strong new password and your tasks will be waiting right where you left them.</p>
+      </div>
+
+      <p class="aside-footer">&copy; <span class="year">2026</span> TimeWise. Made for people who value their time.</p>
+    </aside>
+
+    <main class="auth-main">
+      <div class="auth-topbar">
+        <a class="back-link" href="index.html">&larr; Back to home</a>
+        <p>Remembered it? <a href="login.html">Log in</a></p>
+      </div>
+
+      <a class="brand auth-mobile-brand" href="index.html" aria-label="TimeWise home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="11" stroke="currentColor" stroke-width="3"/><path d="M16 9v8l5 3" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="brand-name">TimeWise</span>
+      </a>
+
+      <section class="auth-card" aria-labelledby="reset-title">
+        <header class="auth-card-head">
+          <h1 id="reset-title">Set a new password</h1>
+          <p id="reset-intro">Checking your reset link…</p>
+        </header>
+
+        <form id="reset-form" novalidate hidden>
+          <div class="field">
+            <label for="new-password">New password</label>
+            <div class="input-wrap has-toggle">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <input id="new-password" name="password" type="password" placeholder="At least 8 characters" autocomplete="new-password" aria-describedby="new-password-error" required>
+              <button class="password-toggle" type="button" data-toggle-target="new-password" aria-label="Show password"><span class="toggle-text">Show</span></button>
+            </div>
+            <p class="field-error" id="new-password-error" aria-live="polite"></p>
+          </div>
+
+          <div class="field">
+            <label for="confirm-password">Confirm password</label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <input id="confirm-password" name="confirm" type="password" placeholder="Repeat your new password" autocomplete="new-password" aria-describedby="confirm-error" required>
+            </div>
+            <p class="field-error" id="confirm-error" aria-live="polite"></p>
+          </div>
+
+          <button class="btn btn-primary btn-block" type="submit">Update password</button>
+          <p class="form-notice" id="reset-notice" role="status" aria-live="polite"></p>
+        </form>
+
+        <div id="reset-expired" hidden>
+          <p class="form-notice">This link is invalid or has expired. Request a fresh one from the login page.</p>
+          <a class="btn btn-primary btn-block" href="login.html">Go to login</a>
+        </div>
+      </section>
+
+      <p class="auth-legal">Your tasks and settings stay tied to your account.</p>
+    </main>
+  </div>
+
+  <script src="assets/js/config.js" defer></script>
+  <script src="assets/js/supabase.js" defer></script>
+  <script src="assets/js/reset.js" defer></script>
+  <script src="assets/js/pwa.js" defer></script>
+</body>
+</html>

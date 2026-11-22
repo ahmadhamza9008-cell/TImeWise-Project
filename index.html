@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="TimeWise helps you plan your day, focus on what matters, and understand where your time goes.">
+  <meta name="theme-color" content="#0f172a">
+  <title>TimeWise — Make every hour count</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="TimeWise home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="11" stroke="currentColor" stroke-width="3"/>
+            <path d="M16 9v8l5 3" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="brand-name">TimeWise</span>
+      </a>
+
+      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#faq">FAQ</a>
+        <a class="nav-login" href="login.html">Log in</a>
+        <a class="btn btn-sm btn-primary" href="register.html">Get started free</a>
+      </nav>
+
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-controls="site-nav" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section class="hero section">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="pulse" aria-hidden="true"></span> Version 1.0 — early access is open</p>
+          <h1>Make every hour <span class="gradient-text">count.</span></h1>
+          <p class="hero-lead">
+            TimeWise turns a messy to-do list into a calm, focused plan. Capture tasks,
+            protect your deep work time, and finally see where your day goes.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary btn-lg" href="register.html">
+              Start planning free
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a class="btn btn-ghost btn-lg" href="#how-it-works">See how it works</a>
+          </div>
+          <p class="hero-note">No credit card required · Set up in under two minutes</p>
+        </div>
+
+        <div class="hero-visual" aria-label="Preview of the TimeWise dashboard">
+          <div class="app-window">
+            <div class="window-bar">
+              <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="window-title">Today · TimeWise</span>
+              <span class="window-spacer" aria-hidden="true"></span>
+            </div>
+
+            <div class="window-body">
+              <aside class="mock-sidebar" aria-hidden="true">
+                <div class="mock-logo"></div>
+                <div class="mock-nav-item active"></div>
+                <div class="mock-nav-item"></div>
+                <div class="mock-nav-item"></div>
+                <div class="mock-nav-item short"></div>
+              </aside>
+
+              <div class="mock-main">
+                <div class="mock-heading">
+                  <div>
+                    <span class="mock-kicker">MONDAY, 9 NOVEMBER</span>
+                    <strong>Good morning, Ahmad</strong>
+                  </div>
+                  <span class="mock-avatar" aria-hidden="true">A</span>
+                </div>
+
+                <div class="mock-cards">
+                  <div class="mock-stat">
+                    <span class="mock-stat-label">Focus time</span>
+                    <strong>3h 20m</strong>
+                    <span class="mock-trend">+18% vs last week</span>
+                  </div>
+                  <div class="mock-stat">
+                    <span class="mock-stat-label">Tasks done</span>
+                    <strong>7 / 9</strong>
+                    <span class="mock-trend muted">2 remaining today</span>
+                  </div>
+                </div>
+
+                <div class="mock-panel">
+                  <div class="mock-panel-head">
+                    <strong>Today&rsquo;s plan</strong>
+                    <span class="mock-pill">Auto-scheduled</span>
+                  </div>
+                  <ul class="mock-tasks">
+                    <li class="done"><span class="mock-check">✓</span> Review sprint notes <time>09:00</time></li>
+                    <li class="active"><span class="mock-check"></span> Draft project proposal <time>10:30</time></li>
+                    <li><span class="mock-check"></span> Design review <time>13:00</time></li>
+                    <li><span class="mock-check"></span> Inbox &amp; admin <time>15:30</time></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="floating-chip chip-focus" aria-hidden="true">
+              <span class="chip-icon">◷</span>
+              <span><strong>Focus session</strong><small>25 min · in progress</small></span>
+            </div>
+            <div class="floating-chip chip-streak" aria-hidden="true">
+              <span class="chip-icon flame">◆</span>
+              <span><strong>12-day streak</strong><small>Keep it going!</small></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Logo / trust strip -->
+    <section class="trust-strip" aria-label="Built for people who value their time">
+      <div class="container trust-inner">
+        <p>Simple enough for a busy day. Powerful enough for your whole week.</p>
+        <div class="trust-points">
+          <span>✓ No cluttered setup</span>
+          <span>✓ Works on any device</span>
+          <span>✓ Your data, yours to keep</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section features" id="features">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow eyebrow-dark">Everything you need</p>
+          <h2>One place for your plans, focus, and progress.</h2>
+          <p class="section-sub">
+            TimeWise keeps the simple things simple and the useful things close at hand.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card reveal">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M5 12h14M5 17h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="17" r="2" stroke="currentColor" stroke-width="2"/></svg>
+            </span>
+            <h3>Capture in seconds</h3>
+            <p>Dump everything on your mind into one inbox. Sort it later, or let TimeWise suggest a slot.</p>
+          </article>
+
+          <article class="feature-card reveal">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </span>
+            <h3>Plan a realistic day</h3>
+            <p>Drag tasks onto your calendar and see instantly when your day is full — before it happens.</p>
+          </article>
+
+          <article class="feature-card reveal">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="2"/><path d="M12 9v4l3 2M9 2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </span>
+            <h3>Protect deep work</h3>
+            <p>Start a focus session, silence distractions, and build a streak you&rsquo;ll actually want to keep.</p>
+          </article>
+
+          <article class="feature-card reveal">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10m5 10V4m5 16v-7m5 7V8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </span>
+            <h3>See where time goes</h3>
+            <p>Clear weekly insights show your focus patterns, so you can make small changes that stick.</p>
+          </article>
+
+          <article class="feature-card reveal">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>Gentle reminders</h3>
+            <p>Nudges at the right moment, not all day. Stay on track without feeling nagged.</p>
+          </article>
+
+          <article class="feature-card reveal">
+            <span class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" stroke-width="2"/></svg>
+            </span>
+            <h3>Sync everywhere</h3>
+            <p>Start on your laptop, check in from your phone. One account, one calm, consistent plan.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section how" id="how-it-works">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow eyebrow-dark">How it works</p>
+          <h2>From scattered thoughts to a steady routine.</h2>
+          <p class="section-sub">Three small steps. No complicated methodology to learn.</p>
+        </div>
+
+        <ol class="steps">
+          <li class="step reveal">
+            <span class="step-number">01</span>
+            <h3>Create your space</h3>
+            <p>Sign up, set a few preferences, and choose what a good day looks like for you.</p>
+          </li>
+          <li class="step reveal">
+            <span class="step-number">02</span>
+            <h3>Capture &amp; plan</h3>
+            <p>Add tasks as they come up, then shape them into a day that fits your real energy.</p>
+          </li>
+          <li class="step reveal">
+            <span class="step-number">03</span>
+            <h3>Focus &amp; reflect</h3>
+            <p>Work in focused blocks, tick things off, and review a simple summary at week&rsquo;s end.</p>
+          </li>
+        </ol>
+
+        <div class="cta-inline reveal">
+          <div>
+            <h3>Ready for a calmer kind of productivity?</h3>
+            <p>Join the early access list and be first to know when your account is ready.</p>
+          </div>
+          <form class="signup-form" id="early-access-form" novalidate>
+            <label class="sr-only" for="email">Email address</label>
+            <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+            <button class="btn btn-primary" type="submit">Join the list</button>
+            <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section faq" id="faq">
+      <div class="container faq-grid">
+        <div class="section-head reveal faq-intro">
+          <p class="eyebrow eyebrow-dark">Questions</p>
+          <h2>Good to know.</h2>
+          <p class="section-sub">A few things people ask before they start.</p>
+        </div>
+        <div class="faq-list reveal">
+          <details>
+            <summary>Is TimeWise free to use?</summary>
+            <p>Version 1.0 is free while we are in early access. If that changes, existing users will be told well in advance.</p>
+          </details>
+          <details>
+            <summary>Do I need to install anything?</summary>
+            <p>No. TimeWise runs in your browser. A mobile app is planned for later, using the same account and data.</p>
+          </details>
+          <details>
+            <summary>Can I use it for team projects?</summary>
+            <p>The first release focuses on personal planning and focus. Team features are on the roadmap.</p>
+          </details>
+          <details>
+            <summary>What happens to my data?</summary>
+            <p>Your tasks and settings stay tied to your account. You can export or delete them whenever you like.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="11" stroke="currentColor" stroke-width="3"/><path d="M16 9v8l5 3" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="brand-name">TimeWise</span>
+        </a>
+        <p>Plan with intention. Work with focus. Finish with confidence.</p>
+      </div>
+
+      <nav aria-label="Footer navigation">
+        <h3>Product</h3>
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="register.html">Get started</a>
+      </nav>
+
+      <nav aria-label="Company navigation">
+        <h3>Company</h3>
+        <a href="#faq">FAQ</a>
+        <a href="mailto:hello@timewise.app">Contact</a>
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="#top">Back to top</a>
+      </nav>
+
+      <div class="footer-note">
+        <h3>Stay in the loop</h3>
+        <p>Version 1.0 is just the beginning.</p>
+        <a class="btn btn-outline btn-sm" href="register.html">Create an account</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; <span id="year">2026</span> TimeWise. All rights reserved.</p>
+      <p>Made for people who value their time.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/config.js" defer></script>
+  <script src="assets/js/supabase.js" defer></script>
+  <script src="assets/js/main.js" defer></script>
+  <script src="assets/js/pwa.js" defer></script>
+</body>
+</html>

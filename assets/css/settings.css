@@ -1,0 +1,92 @@
+/* ==========================================================================
+   TimeWise — settings screen
+   Builds on styles.css + dashboard.css (shared app shell).
+   ========================================================================== */
+
+.settings-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 22px; align-items: start; }
+.settings-stack { display: grid; gap: 22px; min-width: 0; }
+
+/* Profile */
+.profile-row { display: flex; align-items: flex-start; gap: 18px; }
+.avatar-preview {
+  display: grid;
+  place-items: center;
+  width: 64px; height: 64px;
+  flex: none;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--ink), #1e293b);
+  color: var(--glow);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.profile-form { flex: 1; min-width: 0; }
+.profile-form label,
+.setting-group label,
+.setting-group legend { display: block; margin-bottom: 7px; font-size: .8rem; font-weight: 600; color: var(--ink-soft); }
+.profile-input-row { display: flex; gap: 8px; }
+.profile-input-row input {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: .88rem;
+}
+.profile-input-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(13, 148, 136, .12); }
+.field-hint { margin: 8px 0 0; font-size: .74rem; color: var(--muted); }
+
+/* Preferences */
+.setting-group { margin: 0; padding: 0 0 20px; border: 0; border-bottom: 1px solid #f1f5f9; }
+.setting-group + .setting-group { padding-top: 20px; }
+.setting-group:last-child { border-bottom: 0; padding-bottom: 0; }
+.radio-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.radio-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.radio-card:has(input:checked) { border-color: var(--accent); background: #f0fdfa; }
+.radio-card input { accent-color: var(--accent); }
+.radio-card strong { display: block; font-size: .84rem; }
+.radio-card small { display: block; margin-top: 2px; font-size: .72rem; color: var(--muted); }
+.setting-group select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font-size: .86rem;
+}
+
+/* Data */
+.data-count { font-size: .78rem; font-weight: 600; color: var(--accent); white-space: nowrap; }
+.data-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn-danger { background: #fef2f2; color: #b91c1c; }
+.btn-danger:hover { background: #fee2e2; }
+.btn-block { width: 100%; }
+
+/* Account / about */
+.connection-text { margin: 0 0 14px; padding: 13px 14px; border-radius: 11px; background: var(--surface-soft); font-size: .84rem; color: var(--ink-soft); }
+.about-line { display: flex; align-items: center; justify-content: space-between; margin: 0; font-size: .9rem; }
+.about-line span { font-size: .74rem; color: var(--muted); }
+
+/* Search */
+.settings-search-empty { margin: 8px 0 0; padding: 18px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); text-align: center; font-size: .86rem; }
+
+@media (max-width: 1000px) {
+  .settings-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .profile-row { flex-direction: column; }
+  .radio-cards { grid-template-columns: 1fr; }
+}
