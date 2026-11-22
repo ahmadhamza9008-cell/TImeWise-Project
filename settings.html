@@ -250,6 +250,17 @@
           </div>
 
           <aside class="settings-stack">
+            <section class="panel plan-panel" aria-labelledby="plan-title">
+              <div class="panel-head">
+                <div><h2 id="plan-title">Your plan</h2><p>Free today, Pro when you need it.</p></div>
+              </div>
+              <p class="plan-name" id="plan-name">Free plan</p>
+              <p class="connection-text" id="plan-detail">Checking your plan…</p>
+              <p class="field-hint" id="plan-usage"></p>
+              <a class="btn btn-primary btn-block" href="pricing.html" id="plan-upgrade">See plans &amp; upgrade</a>
+              <button class="btn btn-ghost btn-block" type="button" id="plan-manage" hidden>Manage billing</button>
+            </section>
+
             <section class="panel" aria-labelledby="account-title">
               <div class="panel-head">
                 <div><h2 id="account-title">Account</h2><p>Backend connection status.</p></div>
@@ -290,6 +301,7 @@
   <script src="assets/js/app-settings.js" defer></script>
   <script src="assets/js/notifications.js" defer></script>
   <script src="assets/js/push.js" defer></script>
+  <script src="assets/js/billing.js" defer></script>
   <script src="assets/js/settings-page.js" defer></script>
   <script src="assets/js/pwa.js" defer></script>
 </body>

@@ -1,5 +1,13 @@
 apply plugin: 'com.android.application'
 
+// Release signing credentials are supplied by the build environment, never
+// committed to source control. Without them the app still builds unsigned.
+def releaseKeystore = System.getenv('TIMEWISE_KEYSTORE')
+def releaseStorePassword = System.getenv('TIMEWISE_KEYSTORE_PASSWORD')
+def releaseKeyAlias = System.getenv('TIMEWISE_KEY_ALIAS')
+def releaseKeyPassword = System.getenv('TIMEWISE_KEY_PASSWORD')
+def canSignRelease = releaseKeystore && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+
 android {
     namespace "com.timewise.app"
     compileSdk rootProject.ext.compileSdkVersion
@@ -7,7 +15,7 @@ android {
         applicationId "com.timewise.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        versionCode 2
         versionName "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -16,10 +24,21 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (canSignRelease) {
+                storeFile file(releaseKeystore)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (canSignRelease) signingConfig signingConfigs.release
         }
     }
 }

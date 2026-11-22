@@ -387,6 +387,41 @@ window.TimeWiseBackend = (function () {
     });
   }
 
+  function getSubscription() {
+    return requireUser().then(function (user) {
+      if (!user || !client) return null;
+      return client.from('subscriptions')
+        .select('plan, status, current_period_end, cancel_at_period_end, stripe_customer_id, stripe_subscription_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+    }).then(function (result) {
+      if (!result) return null;
+      if (result.error) throw result.error;
+      return result.data;
+    });
+  }
+
+  function invokeFunction(name, body) {
+    return getClient().then(function (supabase) {
+      if (!supabase) throw new Error('Connect Supabase first.');
+      return supabase.functions.invoke(name, { body: body || {} }).catch(function (error) {
+        // supabase-js throws FunctionsError for non-2xx responses; the useful
+        // message is in the response body, not in error.message.
+        var context = error && error.context;
+        if (context && context.context) context = context.context;
+        if (context && typeof context.text === 'function') {
+          try { context = JSON.parse(context.text()); } catch (e) { context = null; }
+        }
+        var message = context && (context.error || context.message) || (error && error.message);
+        throw new Error(String(message || 'Request failed.'));
+      });
+    }).then(function (response) {
+      var data = response && response.data;
+      if (data && data.error) throw new Error(String(data.error));
+      return data || {};
+    });
+  }
+
   function savePushSubscription(subscription, timezone) {
     return requireUser().then(function (user) {
       if (!user || !client) return null;
@@ -425,6 +460,9 @@ window.TimeWiseBackend = (function () {
         if (payload && payload.table === 'profiles') {
           window.dispatchEvent(new CustomEvent('timewise:profile-changed', { detail: payload }));
         }
+        if (payload && payload.table === 'subscriptions') {
+          window.dispatchEvent(new CustomEvent('timewise:subscription-changed', { detail: payload }));
+        }
         callback(payload);
       }
       realtimeChannel = client
@@ -437,6 +475,9 @@ window.TimeWiseBackend = (function () {
         }, notify)
         .on('postgres_changes', {
           event: '*', schema: 'public', table: 'profiles', filter: 'id=eq.' + user.id
+        }, notify)
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'subscriptions', filter: 'user_id=eq.' + user.id
         }, notify)
         .subscribe();
       return realtimeChannel;
@@ -461,6 +502,8 @@ window.TimeWiseBackend = (function () {
     onAuthChange: onAuthChange,
     getProfile: getProfile,
     saveProfile: saveProfile,
+    getSubscription: getSubscription,
+    invokeFunction: invokeFunction,
     fetchTasks: fetchTasks,
     insertTask: insertTask,
     updateTask: updateTask,

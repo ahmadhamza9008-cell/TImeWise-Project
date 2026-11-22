@@ -2,3 +2,14 @@ project_id = "rntlrtuufsvtxrvbrghf"
 
 [functions.send-due-reminders]
 verify_jwt = false
+
+[functions.create-checkout-session]
+verify_jwt = true
+
+[functions.create-portal-session]
+verify_jwt = true
+
+# Stripe signs webhooks itself; it cannot send a Supabase JWT. Signature
+# verification happens inside the function with STRIPE_WEBHOOK_SECRET.
+[functions.stripe-webhook]
+verify_jwt = false

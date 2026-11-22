@@ -117,6 +117,33 @@ Setup:
 
 The Edge Function resolves the account's profile time zone (falling back to the subscription zone), respects the global mute / quiet hours / muted tags, checks each task's lead time, skips active snoozes, sends the push, and removes stale subscriptions scoped to the owning user. Remember to add `https://localhost/*` to Supabase redirect URLs for the Android WebView.
 
+## Subscriptions & payments (Stripe)
+
+Free includes 25 active tasks and 3 steps per task. Pro is unlimited. When Stripe is not configured, the app stays in **local-demo mode**: all limits are unlocked, the pricing page explains the demo, and no network calls are made. No card data ever reaches TimeWise — Checkout and the billing portal are hosted by Stripe.
+
+Setup (use Stripe **test mode** first):
+
+1. Run `supabase/billing.sql` in the SQL Editor. It creates the read-only `subscriptions` table, the webhook replay table, and realtime publication.
+2. Create a recurring monthly Price in Stripe and copy its price ID.
+3. Store secrets **only** in Supabase, never in browser files:
+   ```bash
+   supabase secrets set \
+     STRIPE_SECRET_KEY=sk_test_... \
+     STRIPE_PRICE_PRO=price_... \
+     STRIPE_WEBHOOK_SECRET=whsec_... \
+     SITE_URL=https://your-site.com
+   ```
+   `SITE_URL` must be the deployed site's origin — it becomes the Checkout success/cancel and billing portal return URL.
+4. In Stripe, add a webhook endpoint at `https://<project-ref>.supabase.co/functions/v1/stripe-webhook` for these events:
+   `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`. Copy the endpoint signing secret into `STRIPE_WEBHOOK_SECRET`.
+5. Deploy the functions (JWT settings come from `supabase/config.toml`; only the webhook skips JWT verification because Stripe signs its own requests):
+   ```bash
+   supabase functions deploy create-checkout-session create-portal-session stripe-webhook --yes
+   ```
+6. Paste the Stripe **publishable** key (`pk_test_...` / `pk_live_...`) into `stripePublishableKey` in `assets/js/config.js`, bump the service-worker cache version in `sw.js`, then sync/redeploy the site.
+
+`create-checkout-session` and `create-portal-session` verify the signed-in user from the Supabase JWT. The webhook verifies the Stripe signature (HMAC-SHA256, 5-minute tolerance), rejects replays, and is the only writer of entitlements. Users see their plan on `settings.html` and can upgrade or manage billing from `pricing.html`.
+
 ## Native Android app (Capacitor)
 
 The project includes a Capacitor Android wrapper. It loads the same static app in a WebView; there is no separate mobile codebase.
@@ -141,6 +168,7 @@ The `android/` project is already generated and synced. Building an APK addition
 ```bash
 node tests/store.test.js
 node tests/settings.test.js
+node tests/billing.test.js
 python3 tests/smoke.py
 ```
 
@@ -156,16 +184,18 @@ node tests/push-probe.js
 
 The probe creates five temporary tasks, invokes the function, checks the results, and deletes its own rows. It uses the existing push subscription, so up to two test notifications may arrive on the registered device. Keep the secret key out of browser code and out of version control.
 
-## First release checklist
+## Nine-stage build status
 
-Progress: **8/8**
+| Stage | Status |
+| --- | --- |
+| 1. Product planning & design spec | Done — `docs/DESIGN-SPEC.md` |
+| 2. Landing page & UI | Done |
+| 3. Registration & login | Done |
+| 4. Task management & dashboard | Done |
+| 5. Planner, calendar & focus timer | Done |
+| 6. Supabase database & security | Done |
+| 7. Subscriptions & payments | Done — local-demo fallback plus Stripe Edge Functions |
+| 8. Mobile application | Done — PWA + Capacitor Android wrapper |
+| 9. Testing & launch | Testing done — deployment artifacts in `docs/` |
 
-- [x] Create the TimeWise project folder
-- [x] Design the landing page
-- [x] Build the registration and login screens
-- [x] Create the dashboard
-- [x] Build the task management system
-- [x] Connect Supabase
-- [x] Test the web application
-- [x] Begin mobile development
-# TImeWise-Project
+Launch assets: `docs/DEPLOYMENT.md`, `docs/STORE_LISTING.md`, `docs/RELEASE-CHECKLIST.md`.

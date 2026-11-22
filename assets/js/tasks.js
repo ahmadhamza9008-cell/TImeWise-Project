@@ -9,6 +9,7 @@
   }
 
   var Store = window.TimeWiseStore;
+  var Billing = window.TimeWiseBilling;
   var activeFilter = 'all';
 
   function escapeHtml(value) {
@@ -268,6 +269,13 @@
 
   if (addSubtaskButton) {
     addSubtaskButton.addEventListener('click', function () {
+      if (Billing && Billing.checkSubtaskCreation) {
+        var stepCheck = Billing.checkSubtaskCreation(collectSubtasks().length);
+        if (!stepCheck.allowed) {
+          showToast(stepCheck.message);
+          return;
+        }
+      }
       addSubtaskRow('');
       var rows = subtaskEditor.querySelectorAll('.subtask-title');
       if (rows.length) rows[rows.length - 1].focus();
@@ -341,6 +349,15 @@
         Store.updateTask(editingId, data);
         showToast('Task updated.');
       } else {
+        if (Billing && Billing.checkTaskCreation) {
+          var activeCount = Store.getTasks().filter(function (task) { return !task.done; }).length;
+          var taskCheck = Billing.checkTaskCreation(activeCount);
+          if (!taskCheck.allowed) {
+            if (formError) formError.textContent = taskCheck.message;
+            showToast(taskCheck.message);
+            return;
+          }
+        }
         Store.addTask(data);
         showToast('Task added.');
       }

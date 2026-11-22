@@ -1,6 +1,6 @@
 /* TimeWise service worker — offline app shell for the installable PWA. */
 
-const CACHE_NAME = 'timewise-v7';
+const CACHE_NAME = 'timewise-v8';
 const NETWORK_TIMEOUT_MS = 1500;
 
 const CORE_ASSETS = [
@@ -13,6 +13,7 @@ const CORE_ASSETS = [
   './calendar.html',
   './insights.html',
   './settings.html',
+  './pricing.html',
   './reset.html',
   './terms.html',
   './privacy.html',
@@ -27,6 +28,7 @@ const CORE_ASSETS = [
   './assets/css/calendar.css',
   './assets/css/insights.css',
   './assets/css/settings.css',
+  './assets/css/pricing.css',
   './assets/css/notifications.css',
   './assets/js/a11y.js',
   './assets/js/config.js',
@@ -42,6 +44,8 @@ const CORE_ASSETS = [
   './assets/js/settings.js',
   './assets/js/app-settings.js',
   './assets/js/settings-page.js',
+  './assets/js/billing.js',
+  './assets/js/pricing.js',
   './assets/js/push.js',
   './assets/js/reset.js',
   './assets/js/notifications.js',

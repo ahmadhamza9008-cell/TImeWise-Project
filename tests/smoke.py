@@ -23,6 +23,7 @@ PAGES = {
     "calendar.html": ["calendar-grid", "day-task-list", "manifest.webmanifest"],
     "insights.html": ["insights-grid", "donut-value", "id=\"focus-task-list\"", "manifest.webmanifest"],
     "settings.html": ["profile-form", "week-start", "name=\"theme\"", "manifest.webmanifest"],
+    "pricing.html": ["Simple, honest pricing", "id=\"upgrade-btn\"", "id=\"free-cta\"", "manifest.webmanifest"],
 }
 EXPECTED_TASKS = {"dashboard.html": 4, "tasks.html": 5}
 # Ignore external font/CDN resource warnings; only flag real JavaScript errors.

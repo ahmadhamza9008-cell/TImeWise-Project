@@ -14,5 +14,10 @@ window.TimeWiseConfig = {
   /* Optional: your site's base URL (origin), e.g. http://localhost:8000 or
      https://your-site.com. Each flow appends its own page (dashboard.html,
      reset.html). Leave blank to derive it from the current page. */
-  redirectUrl: ''
+  redirectUrl: '',
+
+  /* Stripe publishable key (pk_test_... or pk_live_...). Safe in the browser.
+     Leave blank to run the full local-demo experience with all limits unlocked.
+     Secret key, price ID and webhook secret belong ONLY in Supabase secrets. */
+  stripePublishableKey: ''
 };

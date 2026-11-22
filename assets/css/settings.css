@@ -74,6 +74,17 @@
 .btn-danger:hover { background: #fee2e2; }
 .btn-block { width: 100%; }
 
+/* Plan / billing */
+.plan-name {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.plan-panel .connection-text { margin-bottom: 8px; }
+.plan-panel .btn + .btn { margin-top: 8px; }
+
 /* Account / about */
 .connection-text { margin: 0 0 14px; padding: 13px 14px; border-radius: 11px; background: var(--surface-soft); font-size: .84rem; color: var(--ink-soft); }
 .about-line { display: flex; align-items: center; justify-content: space-between; margin: 0; font-size: .9rem; }
