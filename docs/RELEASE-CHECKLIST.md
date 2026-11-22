@@ -21,7 +21,7 @@ SUPABASE_SECRET_KEY=sb_secret_... \
 
 - [ ] **Code freeze**: release commit/tag recorded; no source edits after QA sign-off; `git status` clean.
 - [ ] Version alignment checked: `package.json` `1.1.0`, `android/app/build.gradle` `versionName "1.1.0"`, `versionCode` bumped for this upload; store "What's new" says v1.1.
-- [ ] `assets/js/config.js` verified per environment: `supabaseUrl` HTTPS, `supabaseAnonKey` publishable (`sb_publishable_...`), VAPID public key matches the Edge Function secret, `redirectUrl` correct/blank, `stripePublishableKey` deliberately set (`pk_live_...`) or blank for demo. **No secret/service-role/Stripe secret keys anywhere in browser code.**
+- [ ] `assets/js/config.js` verified per environment: `supabaseUrl` HTTPS, `supabaseAnonKey` publishable (`sb_publishable_...`), VAPID public key matches the Edge Function secret, `redirectUrl` correct/blank, `paystackPublicKey` deliberately set (`pk_test_...`/`pk_live_...`) or blank for demo. **No secret/service-role/Paystack secret keys anywhere in browser code.**
 - [ ] `supabase/config.toml` project ID matches the target project; `verify_jwt = false` for `send-due-reminders` is intentional.
 - [ ] SW cache name bumped (`sw.js`: `timewise-v7` → next value) if any cached file changed; `CORE_ASSETS` updated if files were added/removed.
 - [ ] Generated copies refreshed: `npm run web:sync`; `npm run cap:sync` for native; `npm run assets:native` only if icons/splashes changed.
@@ -40,7 +40,7 @@ SUPABASE_SECRET_KEY=sb_secret_... \
 
 ## 3. Pre-launch — Supabase, RLS, and functions
 
-- [ ] Migrations applied in order: `schema.sql` → `profiles.sql` → `push.sql` → `enhancements.sql` → `product-requirements.sql` → (optional `recurring.sql`, `waitlist.sql`) → **`billing.sql` (Stripe, present in this repo)**.
+- [ ] Migrations applied in order: `schema.sql` → `profiles.sql` → `push.sql` → `enhancements.sql` → `product-requirements.sql` → (optional `recurring.sql`, `waitlist.sql`) → **`billing.sql` / `paystack.sql` (Paystack billing, present in this repo)**.
 - [ ] RLS verification queries (SQL Editor) — all expected results:
 
 ```sql
@@ -70,23 +70,23 @@ rollback;
 ```
 
 - [ ] Focus-session ownership FK present: `focus_sessions_owner_task_fkey` references `(user_id, id)`; tasks have full replica identity.
-- [ ] Edge Functions deployed with correct JWT flags: `send-due-reminders --no-verify-jwt`, `create-checkout-session`, `create-portal-session`, `stripe-webhook --no-verify-jwt`.
+- [ ] Edge Functions deployed with correct JWT flags: `send-due-reminders --no-verify-jwt`, `initialize-paystack-payment`, `manage-paystack-subscription`, `paystack-webhook --no-verify-jwt`.
 - [ ] Edge Function health checks:
   - [ ] `curl -sS -o /dev/null -w '%{http_code}' -X POST $SUPABASE_URL/functions/v1/send-due-reminders` → **401** (unauthenticated).
   - [ ] `curl -sS -X POST -H "x-cron-secret: $CRON_SECRET" .../send-due-reminders` → JSON with `sent/failed/subscriptions/tasksChecked`, no `"error"`.
   - [ ] `supabase functions logs send-due-reminders --project-ref <ref> --tail` shows no unexpected exceptions.
   - [ ] If billing on: checkout/portal reject requests without a JWT (401/503); webhook rejects an unsigned POST (400/503).
-- [ ] Secrets set in Supabase (never browser): `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`; VAPID public key matches `config.js`. If billing on: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_PRO`, `STRIPE_WEBHOOK_SECRET`, `SITE_URL`.
+- [ ] Secrets set in Supabase (never browser): `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`; VAPID public key matches `config.js`. If billing on: `PAYSTACK_SECRET_KEY`, `PAYSTACK_PLAN_CODE`, `SITE_URL`.
 - [ ] pg_cron job active: `select jobname, schedule, active from cron.job where jobname = 'timewise-send-due-reminders';` → every 5 minutes, active; recent `cron.job_run_details` show success.
 - [ ] Auth URL config: Site URL plus `register.html`, `login.html`, `dashboard.html`, `reset.html`, wildcard, and **`https://localhost/*`** for the Android WebView.
 
 ### Billing (only if enabled)
 
-- [ ] Stripe webhook endpoint registered for `checkout.session.completed` + `customer.subscription.created/updated/deleted`; signing secret stored as `STRIPE_WEBHOOK_SECRET`.
-- [ ] Stripe test-mode purchase → `subscriptions` row has `plan='pro'`, `status='active'`; Settings → **Your plan** shows Pro; cancel → Free after webhook; duplicate event is acknowledged without double-writing (`stripe_webhook_events`).
+- [ ] Paystack webhook endpoint registered at `https://<PROJECT_REF>.supabase.co/functions/v1/paystack-webhook` in Paystack Dashboard → Settings → API Keys & Webhooks. Paystack signs with `x-paystack-signature` (HMAC SHA512 using your secret key).
+- [ ] Paystack test-mode purchase → `subscriptions` row has `plan='pro'`, `status` reflects active entitlement; Settings → **Your plan** shows Pro; cancel/non-renew updates after webhook; duplicate event is acknowledged without double-writing (`stripe_webhook_events`, legacy replay-table name).
 - [ ] `pricing.html` exists, is linked from Settings/navigation, and `pricing.html` + `assets/css/pricing.css` + `assets/js/billing.js` + `assets/js/pricing.js` are in `sw.js` `CORE_ASSETS` before the cache bump.
-- [ ] Play Store decision recorded: Stripe web checkout is **not** Play Billing — either ship Play build with billing off or complete Play Billing/policy work before selling through Play.
-- [ ] `privacy.html` lists Stripe as a third party; store data-safety answers updated.
+- [ ] Play Store decision recorded: Paystack web checkout is **not** Play Billing — either ship Play build with billing off or complete Play Billing/policy work before selling through Play.
+- [ ] `privacy.html` lists Paystack as a third party; store data-safety answers updated.
 
 ## 4. Pre-launch — PWA, Android, store assets
 
@@ -96,7 +96,7 @@ rollback;
 - [ ] Android debug smoke: `npm run cap:sync`, app opens in Android Studio, login works in WebView (`https://localhost/*` allow-listed), back button exits cleanly.
 - [ ] **Android release build/signing**: signed AAB/APK produced (`/home/ahmad/tools/build-release.sh` or Gradle `assembleRelease bundleRelease` with `TIMEWISE_*` env vars), keystore + passwords backed up outside the repo, `versionCode` bumped; no `google-services.json` expected (native FCM not implemented).
 - [ ] Store assets ready: app name/tagline/short description (≤80 chars)/full description/keywords, 5 screenshots (+ optional landing), v1.1 "What's new", privacy and terms URLs, support email, content rating **Everyone**.
-- [ ] Known limitations acknowledged in release notes/metadata: Web Push only, no native FCM, offline shell only, no iOS build, Stripe web checkout vs Play Billing decision.
+- [ ] Known limitations acknowledged in release notes/metadata: Web Push only, no native FCM, offline shell only, no iOS build, Paystack web checkout vs Play Billing decision.
 
 ## 5. Pre-launch — data, accessibility, monitoring
 
@@ -104,7 +104,7 @@ rollback;
 - [ ] **Backup/restore drill completed**: Settings → *Export all data (JSON)* → import with **Merge** and then **Replace** on a test account; verify tasks, subtasks, focus sessions and preferences return. CSV export also checked.
 - [ ] **Accessibility keyboard pass**: skip links appear on focus; all controls reachable with visible focus rings; Today's plan row ↑/↓ reordering works; notification dialog opens with focus, closes with Escape, returns focus to the bell; reduced-motion respected; no horizontal scroll at 1440/1024/768/390 px.
 - [ ] Analytics/monitoring plan confirmed: no analytics SDK is bundled; Supabase Auth/DB/Functions logs, cron `job_run_details`, function counters, static-host access logs, and an uptime probe are configured (or explicitly waived and recorded).
-- [ ] Alerting owner defined for 401s, `failed > 0`, inactive cron, Stripe webhook failures/retries, unexpected Pro entitlements, and certificate expiry.
+- [ ] Alerting owner defined for 401s, `failed > 0`, inactive cron, Paystack webhook failures/retries, unexpected Pro entitlements, and certificate expiry.
 - [ ] Rollback plan reviewed: previous deploy ID/git tag recorded, last known-good function version identified, secret-rotation procedure known (see `DEPLOYMENT.md` §8).
 
 ## 6. Post-launch (first 24–72 hours)
@@ -112,8 +112,8 @@ rollback;
 - [ ] Smoke commands from `DEPLOYMENT.md` §9 re-run against production; badge shows `Connected` for signed-in users.
 - [ ] Edge Function and cron logs checked after the first scheduled run; push counters and `job_run_details` healthy; no stale-subscription spike.
 - [ ] Auth logs monitored for redirect/config errors; `reset.html` and Android WebView login confirmed from real devices.
-- [ ] If billing on: Stripe webhook log has no retries/failures, `subscriptions` matches Stripe Dashboard, and `stripe_webhook_events` shows no unexpected gaps.
-- [ ] Store listing live with correct privacy policy URL (incl. Stripe disclosure if enabled) and no stray test data in screenshots.
+- [ ] If billing on: Paystack webhook log has no retries/failures, `subscriptions` matches Paystack Dashboard, and `stripe_webhook_events` (legacy replay-table name) shows no unexpected gaps.
+- [ ] Store listing live with correct privacy policy URL (incl. Paystack disclosure if enabled) and no stray test data in screenshots.
 - [ ] Support inbox (`hello@timewise.app`) checked; known limitations communicated consistently.
 - [ ] Feedback/crash reports triaged; any hotfix goes through code freeze → tests → cache bump → redeploy.
 - [ ] Rollback decision point recorded (time, owner, metrics reviewed); release marked complete only after sign-off.

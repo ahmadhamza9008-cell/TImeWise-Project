@@ -40,7 +40,7 @@ function createBilling(options) {
     },
     invokeFunction: (name, body) => {
       calls.push({ name, body });
-      return Promise.resolve({ url: 'https://checkout.stripe.test/session' });
+      return Promise.resolve({ url: 'https://checkout.paystack.test/session' });
     },
     onAuthChange: (callback) => { authCallback = callback; },
     _auth: (session) => {
@@ -76,7 +76,7 @@ function createBilling(options) {
     TimeWiseConfig: {
       supabaseUrl: 'https://example.supabase.co',
       supabaseAnonKey: 'sb_publishable_example_key_with_length',
-      stripePublishableKey: opts.stripeKey === undefined ? 'pk_test_example' : opts.stripeKey
+      paystackPublicKey: opts.paystackKey === undefined ? 'pk_test_example' : opts.paystackKey
     },
     TimeWiseBackend: backend
   };
@@ -96,7 +96,7 @@ const tests = [];
 function test(name, fn) { tests.push({ name, fn }); }
 
 test('local demo mode unlocks all limits', async () => {
-  const { billing } = createBilling({ stripeKey: '' });
+  const { billing } = createBilling({ paystackKey: '' });
   await settle();
   const state = billing.getState();
   assert.strictEqual(state.demo, true);
@@ -167,9 +167,9 @@ test('checkout and portal call the secure Edge Functions', async () => {
   await settle();
   await billing.startCheckout();
   await billing.openPortal();
-  assert.deepStrictEqual(calls.map((call) => call.name), ['create-checkout-session', 'create-portal-session']);
+  assert.deepStrictEqual(calls.map((call) => call.name), ['initialize-paystack-payment', 'manage-paystack-subscription']);
   assert.strictEqual(navigated.length, 2);
-  assert.match(navigated[0], /checkout\.stripe\.test/);
+  assert.match(navigated[0], /checkout\.paystack\.test/);
 });
 
 test('signing out clears entitlement state', async () => {

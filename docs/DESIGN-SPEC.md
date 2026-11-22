@@ -58,13 +58,13 @@ TimeWise is a calm, fast, accessible personal task and time-management companion
 - **PWA** installability, offline app shell, background sync of changes, and push notification handling.
 - **Authentication**: email/password, Google & GitHub OAuth, password reset, local demo mode.
 - **Preferences & data**: settings search, export/import (JSON), full backup, account deletion, cache clearing.
-- **Pricing & billing**: Free and Pro ($5/month) plans, Stripe Checkout + Billing Portal, entitlement-aware feature gating.
+- **Pricing & billing**: Free and Pro ($5/month) plans, Paystack hosted checkout + subscription management, entitlement-aware feature gating.
 
 ### 1.5 Seven core requirements (from README.md)
 
 | # | Requirement | Implementation summary |
 |---|-------------|------------------------|
-| R1 | **Security** | Row Level Security on all Supabase tables; auth-required Edge Functions for Stripe; sanitized inputs; no secrets in client config beyond public keys. |
+| R1 | **Security** | Row Level Security on all Supabase tables; auth-required Edge Functions for Paystack; sanitized inputs; no secrets in client config beyond public keys. |
 | R2 | **Synchronization** | Supabase Postgres + realtime subscriptions; optimistic local state; 250ms debounced refetch; refetch on window focus/visibility; offline change queue via SW background sync. |
 | R3 | **Time zones** | Per-profile `timezone` setting; date/time storage and display normalized through `toLocalDateKey`/`formatDate`/`formatTime`; monthly recurrence clamped to month length. |
 | R4 | **Accessibility** | Semantic landmarks, skip link, live region, full keyboard operation, visible focus rings, `prefers-reduced-motion`, ARIA on dialogs/toggles/tabs; manual checklist provided. |
@@ -340,13 +340,13 @@ States: hover lifts with `--shadow-lift` and shifts `--accent-dark`; active tran
 - Header: "Simple, honest pricing", subhead, plan badge reflecting the current entitlement, and a `?checkout=success|cancel|billing=return` status banner.
 - Two plan cards: **Free** `$0` forever (25 active tasks, 3 steps per task, planner, calendar, focus timer, Insights, reminders, backup) and **Pro** `$5` / month (unlimited tasks and steps, everything in Free, early access to new planning tools).
 - Comparison table and FAQ accordion (limits, cancellation, card storage, local demo).
-- CTA states: local demo → "All features unlocked" (disabled) and a demo explanation; configured + Free → "Upgrade to Pro" (opens Stripe Checkout; signed-out users get a sign-in message); configured + Pro → "You are on Pro" plus "Manage billing" (Stripe portal).
-- `billing.js` exposes `window.TimeWiseBilling` with `configured()`, `getState()`, `refresh()`, `setUser()`, `subscribe()`, `limits()`, `checkTaskCreation()`, `checkSubtaskCreation()`, `startCheckout()`, `openPortal()`. Current `stripePublishableKey: ''` means billing is **not configured** in this checkout: all features are unlocked for local demo. With a valid `pk_test_`/`pk_live_` key + configured Supabase, checkout/portal call Edge Functions `create-checkout-session` and `create-portal-session`.
+- CTA states: local demo → "All features unlocked" (disabled) and a demo explanation; configured + Free → "Upgrade to Pro" (opens Paystack hosted checkout; signed-out users get a sign-in message); configured + Pro → "You are on Pro" plus "Manage billing" (Paystack subscription management).
+- `billing.js` exposes `window.TimeWiseBilling` with `configured()`, `getState()`, `refresh()`, `setUser()`, `subscribe()`, `limits()`, `checkTaskCreation()`, `checkSubtaskCreation()`, `startCheckout()`, `openPortal()`. Current `paystackPublicKey: ''` means billing is **not configured** in this checkout: all features are unlocked for local demo. With a valid `pk_test_`/`pk_live_` key + configured Supabase, checkout/portal call Edge Functions `initialize-paystack-payment` and `manage-paystack-subscription`.
 
 ### 5.9 `privacy.html` / `terms.html` — Legal
 
 - Single-column readable document, max-width 720px, H1 + last-updated date (`21 November 2026`), section anchors, plain-language summary callout.
-- Privacy covers data collected, Supabase storage, Stripe billing data, push tokens, retention, deletion, and contact. Terms cover acceptable use, subscriptions, refunds, and liability.
+- Privacy covers data collected, Supabase storage, Paystack billing data (when enabled), push tokens, retention, deletion, and contact. Terms cover acceptable use, subscriptions, refunds, and liability.
 - Footer links back to home, pricing, and the companion legal page.
 
 ---
@@ -371,7 +371,7 @@ Each flow lists the concrete steps, states, and feedback used in implementation.
 1. With no Supabase session configured/signed in, the app runs in local demo mode.
 2. `app-settings.js` and page scripts render the local identity and load seeded/local tasks from `window.TimeWiseStore`.
 3. The app-status badge shows "Local demo" and settings explain that tasks are saved on this device.
-4. Tasks, focus, and settings work against local storage; billing remains unlocked when Stripe is not configured.
+4. Tasks, focus, and settings work against local storage; billing remains unlocked when Paystack is not configured.
 
 ### Flow 4 — Daily planning & focus session
 1. Dashboard "Top 3" → add up to three priority tasks; reorder with Alt+↑/↓ (focus retained on handle).
@@ -411,8 +411,8 @@ Each flow lists the concrete steps, states, and feedback used in implementation.
 1. User opens `pricing.html` from the header nav, footer, or Settings → "Your plan".
 2. Free plan shows its 25-task / 3-step limits; Pro shows $5/month features. Settings shows live usage against the Free task limit.
 3. "Continue free" → dashboard for signed-in users, register page otherwise.
-4. With Stripe configured: "Upgrade to Pro" → `startCheckout()` → Edge Function `create-checkout-session` → Stripe Checkout → return to `pricing.html?checkout=success&session_id=…` → webhook writes the entitlement → realtime/`refresh()` updates the Pro badge and unlocks limits.
-5. Pro user "Manage billing" → `openPortal()` → Stripe Billing Portal (update card, cancel, invoices), returning to `settings.html?billing=return`.
+4. With Paystack configured: "Upgrade to Pro" → `startCheckout()` → Edge Function `initialize-paystack-payment` → Paystack hosted checkout → return to `pricing.html?checkout=success&reference=…` → webhook writes the entitlement → realtime/`refresh()` updates the Pro badge and unlocks limits.
+5. Pro user "Manage billing" → `openPortal()` → Paystack subscription management page (update card/cancel), returning after provider confirmation; webhook updates entitlement state.
 6. If billing is not configured (current state): the CTA is labelled "All features unlocked"; no limits are enforced and no payment calls are made.
 7. PWA: eligible browsers offer install via `pwa.js`; the installed app opens standalone at `./dashboard.html` (manifest `start_url`), with the offline shell served by SW (`timewise-v8`).
 
@@ -527,7 +527,7 @@ Use before every handoff and release. Each item should be verified in both Light
 - [ ] Notifications grouping, reminder lead times, mute, snooze, Web Push permission states verified.
 - [ ] Timezone change re-renders all dates/times correctly.
 - [ ] Export/import/backup/delete-account flows validated; destructive actions require confirmation.
-- [ ] Billing: Free limits enforced when configured; demo unlock when `stripePublishableKey: ''`; checkout/portal deep-links return and refresh entitlement.
+- [ ] Billing: Free limits enforced when configured; demo unlock when `paystackPublicKey: ''`; checkout/portal deep-links return and refresh entitlement.
 
 ### PWA & performance
 - [ ] Manifest installability; icons correct; standalone launch at `./dashboard.html`.
@@ -594,9 +594,9 @@ Recommended organization for the design source that corresponds to this spec.
 - Completion logs a `focus_sessions` record and updates dashboard stats, activity chart, and Insights.
 
 ### A.5 Billing & entitlement
-- `window.TimeWiseBilling`: `configured()` requires a Stripe key matching `/^pk_(test|live)_/` **and** configured Supabase; `getState()` returns cached/plan state; `checkTaskCreation()` / `checkSubtaskCreation()` gate limits; `startCheckout()` / `openPortal()` call Edge Functions `create-checkout-session` / `create-portal-session`.
+- `window.TimeWiseBilling`: `configured()` requires a Paystack public key matching `/^pk_(test|live)_/` **and** configured Supabase; `getState()` returns cached/plan state; `checkTaskCreation()` / `checkSubtaskCreation()` gate limits; `startCheckout()` / `openPortal()` call Edge Functions `initialize-paystack-payment` / `manage-paystack-subscription`.
 - Free limits: `FREE_TASK_LIMIT = 25`, `FREE_SUBTASK_LIMIT = 3`; active statuses `['active','trialing']`.
-- Current config: `stripePublishableKey: ''` → billing not configured; local demo unlocks all features; pricing CTAs show demo messaging.
+- Current config: `paystackPublicKey: ''` → billing not configured; local demo unlocks all features; pricing CTAs show demo messaging.
 
 ### A.6 PWA / service worker
 - `sw.js` cache name `timewise-v8`; shell cache includes all app pages **and pricing/billing assets**.

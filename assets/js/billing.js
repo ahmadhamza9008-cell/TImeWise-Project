@@ -12,7 +12,7 @@ window.TimeWiseBilling = (function () {
   var STORAGE_KEY = 'timewise_billing';
   var FREE_TASK_LIMIT = 25;
   var FREE_SUBTASK_LIMIT = 3;
-  var ACTIVE_STATUSES = ['active', 'trialing'];
+  var ACTIVE_STATUSES = ['active', 'trialing', 'attention', 'non-renewing'];
 
   var userId = null;
   var state = {
@@ -26,7 +26,7 @@ window.TimeWiseBilling = (function () {
   var refreshPromise = null;
 
   function configured() {
-    var key = String(CFG.stripePublishableKey || '');
+    var key = String(CFG.paystackPublicKey || CFG.stripePublishableKey || '');
     return /^pk_(test|live)_/.test(key) && Boolean(Backend && Backend.isConfigured && Backend.isConfigured());
   }
 
@@ -176,7 +176,7 @@ window.TimeWiseBilling = (function () {
     }
     return requireSession().then(function (session) {
       if (!session || !session.user) throw new Error('Sign in first to upgrade to Pro.');
-      return Backend.invokeFunction('create-checkout-session', { plan: 'pro' });
+      return Backend.invokeFunction('initialize-paystack-payment', { plan: 'pro' });
     }).then(function (result) {
       if (result.url && window.location && window.location.assign) window.location.assign(result.url);
       return result;
@@ -187,7 +187,7 @@ window.TimeWiseBilling = (function () {
     if (!configured()) return Promise.reject(new Error('Billing is not configured in this build.'));
     return requireSession().then(function (session) {
       if (!session || !session.user) throw new Error('Sign in first to manage billing.');
-      return Backend.invokeFunction('create-portal-session', {});
+      return Backend.invokeFunction('manage-paystack-subscription', {});
     }).then(function (result) {
       if (result.url && window.location && window.location.assign) window.location.assign(result.url);
       return result;
@@ -216,7 +216,7 @@ window.TimeWiseBilling = (function () {
       nameEl.textContent = snapshot.demo ? 'Local demo' : (snapshot.plan === 'pro' ? 'TimeWise Pro' : 'Free plan');
       if (detail) {
         if (snapshot.demo) {
-          detail.textContent = 'Stripe is not connected here, so every feature is unlocked.';
+          detail.textContent = 'Paystack is not connected here, so every feature is unlocked.';
         } else if (snapshot.plan === 'pro') {
           detail.textContent = snapshot.cancelAtPeriodEnd
             ? 'Pro is active and will end at the close of the current billing period.'

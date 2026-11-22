@@ -69,7 +69,7 @@ Your data, yours to keep
 TimeWise has no ads, no behavioural tracking and no selling of your data. Sign-in and cloud sync are handled by Supabase with row-level security: only your account can read or change your tasks, profile and push subscription. Settings → Your data lets you export everything as JSON (tasks, subtasks, focus sessions and preferences), import/restore with Merge or Replace, export a CSV summary, clear completed tasks, or reset local data. Turn notifications off at any time to remove your push subscription.
 
 Optional Pro plan
-When billing is enabled, Free includes 25 active tasks and 3 steps per task, while Pro is unlimited. Payments are handled by Stripe's secure checkout and billing portal; TimeWise never stores your card details. If billing is not enabled in your build, every feature is unlocked and no limits apply.
+When billing is enabled, Free includes 25 active tasks and 3 steps per task, while Pro is unlimited. Payments are handled by Paystack’s secure hosted checkout and subscription management; TimeWise never stores your card details. If billing is not enabled in your build, every feature is unlocked and no limits apply.
 
 Start on your laptop, check in from your phone. One account, one calm, consistent plan.
 ```
@@ -141,8 +141,8 @@ Version 1.1 brings the features that make TimeWise a daily habit:
 | **Privacy policy URL** | `https://app.example.com/privacy.html` |
 | **Terms URL** | `https://app.example.com/terms.html` |
 | **In-app links** | Both pages are linked from `index.html` and the registration form; keep them reachable over HTTPS. |
-| **Data collected (per `privacy.html`)** | Account email, display name and password hash (Supabase Auth); tasks and notes; preferences; push subscription endpoint/keys and time zone; waitlist email only if submitted. If billing is enabled: Stripe customer/subscription IDs, plan/status and period end. Card details are handled by Stripe, not stored by TimeWise. |
-| **Data sharing** | Supabase hosts auth, database and the functions. Google/GitHub only if the user chooses those providers. Google Fonts and the Supabase JS CDN are loaded from public CDNs. **If billing is enabled, Stripe processes payments and subscription events — update `privacy.html` to list Stripe before launch.** |
+| **Data collected (per `privacy.html`)** | Account email, display name and password hash (Supabase Auth); tasks and notes; preferences; push subscription endpoint/keys and time zone; waitlist email only if submitted. If billing is enabled: Paystack customer/subscription codes/identifiers, plan/status and period end. Card details are handled by Paystack, not stored by TimeWise. |
+| **Data sharing** | Supabase hosts auth, database and the functions. Google/GitHub only if the user chooses those providers. Google Fonts and the Supabase JS CDN are loaded from public CDNs. **If billing is enabled, Paystack processes payments and subscription events — update `privacy.html` to list Paystack before launch.** |
 | **Ads / tracking** | None. The privacy page explicitly says data is not sold and there is no advertising or behavioural tracking. |
 | **Account deletion / export** | Privacy page directs users to Supabase account settings or the support email; in-app export/import is under Settings → Your data. |
 | **Children** | Not intended for children under 13 (per `privacy.html`). |
@@ -160,13 +160,13 @@ Suggested answers for the Google Play content questionnaire:
 | Rating target | **Everyone** |
 | Violence, horror, sexual content, language | None |
 | Ads | No ads in the app |
-| In-app purchases | Optional Pro subscription when billing is enabled, paid through **Stripe Checkout (web)**, not Google Play Billing. If you ship the Play build with `stripePublishableKey: ''`, answer "None" and do not advertise paid tiers. See §9 for the Play policy caveat. |
+| In-app purchases | Optional Pro subscription when billing is enabled, paid through **Paystack hosted checkout (web)**, not Google Play Billing. If you ship the Play build with `paystackPublicKey: ''`, answer "None" and do not advertise paid tiers. See §9 for the Play policy caveat. |
 | User-generated content | Private to the signed-in account; no public sharing, chat, or moderation surface |
 | Data collection | Email/account data, task content, push subscription, optional waitlist email — described in the privacy policy |
 | Permissions | `INTERNET` only (`android/app/src/main/AndroidManifest.xml`) |
 | Interactive elements | Unrestricted web content is not browsed; the WebView loads the app's own origin (`https://localhost`) |
 
-If you later enable Google/GitHub sign-in, ads, Stripe payments, or external links inside the WebView, revisit the questionnaire. For a Play build that enables Stripe, check Google Play's policy on digital subscriptions (Play Billing is normally required) before publishing.
+If you later enable Google/GitHub sign-in, ads, Paystack payments, or external links inside the WebView, revisit the questionnaire. For a Play build that enables web checkout, check Google Play's policy on digital subscriptions (Play Billing is normally required) before publishing.
 
 ---
 
@@ -176,7 +176,7 @@ If you later enable Google/GitHub sign-in, ads, Stripe payments, or external lin
 - Push requires HTTPS (or `localhost`), a registered service worker, browser notification permission, and a signed-in account with a push subscription. iOS is not included in the repository.
 - The Android app is a Capacitor WebView wrapper around the same static web app; it is not a separate native UI. Auth relies on the `https://localhost/*` Supabase redirect allow-list.
 - Offline mode caches the app shell only. Cloud-synced tasks, profiles, Realtime updates, and push delivery need a network connection; without Supabase credentials the app runs in **Local demo** mode.
-- **Stripe billing is web checkout, not Play Billing.** The repo includes `supabase/billing.sql`, Stripe Edge Functions, `pricing.html`, and `assets/js/billing.js`, but purchases happen in a Stripe-hosted browser page. Google Play generally requires Google Play Billing for digital subscriptions on Android; either leave `stripePublishableKey: ''` in the Play build (all features unlocked, no limits) or implement Play Billing before selling through Play. The PWA/web store can use Stripe Checkout normally.
-- Billing is unconfigured by default (`stripePublishableKey: ''`). Free limits (25 active tasks, 3 subtasks per task) are only enforced when a publishable key **and** Stripe secrets are set. `pricing.html` is present and linked from Settings/navigation.
+- **Paystack billing is web checkout, not Play Billing.** The repo includes `supabase/billing.sql`, `supabase/paystack.sql`, Paystack Edge Functions, `pricing.html`, and `assets/js/billing.js`, but purchases happen on Paystack-hosted pages. Google Play generally requires Google Play Billing for digital subscriptions on Android; either leave `paystackPublicKey: ''` in the Play build (all features unlocked, no limits) or implement Play Billing before selling through Play. The PWA/web store can use Paystack checkout normally.
+- Billing is unconfigured by default (`paystackPublicKey: ''`). Free limits (25 active tasks, 3 subtasks per task) are only enforced when a publishable key **and** Paystack secrets are set. `pricing.html` is present and linked from Settings/navigation. Legacy DB identifiers (`stripe_webhook_events`, `stripe_*` columns) remain in the schema for compatibility; Paystack is the active provider.
 - No analytics SDK or error-reporting SDK is bundled.
 - Minor copy inconsistency to verify before publishing: `settings.html` and the landing page eyebrow still say "Version 1.0" while the shipped version is 1.1.0. Confirm with the product owner whether to leave or update it (documentation only — no source changes made here).

@@ -391,7 +391,7 @@ window.TimeWiseBackend = (function () {
     return requireUser().then(function (user) {
       if (!user || !client) return null;
       return client.from('subscriptions')
-        .select('plan, status, current_period_end, cancel_at_period_end, stripe_customer_id, stripe_subscription_id')
+        .select('plan, status, current_period_end, cancel_at_period_end, provider, provider_subscription_code')
         .eq('user_id', user.id)
         .maybeSingle();
     }).then(function (result) {

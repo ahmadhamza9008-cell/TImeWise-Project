@@ -3,13 +3,13 @@ project_id = "rntlrtuufsvtxrvbrghf"
 [functions.send-due-reminders]
 verify_jwt = false
 
-[functions.create-checkout-session]
+[functions.initialize-paystack-payment]
 verify_jwt = true
 
-[functions.create-portal-session]
+[functions.manage-paystack-subscription]
 verify_jwt = true
 
-# Stripe signs webhooks itself; it cannot send a Supabase JWT. Signature
-# verification happens inside the function with STRIPE_WEBHOOK_SECRET.
-[functions.stripe-webhook]
+# Paystack signs webhooks itself; it cannot send a Supabase JWT. Signature
+# verification happens inside the function with PAYSTACK_SECRET_KEY.
+[functions.paystack-webhook]
 verify_jwt = false

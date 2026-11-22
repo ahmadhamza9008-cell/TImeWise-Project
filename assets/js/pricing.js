@@ -53,9 +53,9 @@
       }
     }
     if (portal) portal.hidden = snapshot.demo || snapshot.plan !== 'pro';
-    if (note && snapshot.demo) note.textContent = 'No card needed — Stripe is not connected in this build.';
+    if (note && snapshot.demo) note.textContent = 'No card needed — Paystack is not connected in this build.';
     if (fineprint && snapshot.configured) {
-      fineprint.textContent = 'Payments are processed by Stripe. TimeWise never stores your card details.';
+      fineprint.textContent = 'Payments are processed by Paystack. TimeWise never stores your card details.';
     }
   }
 

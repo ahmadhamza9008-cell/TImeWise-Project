@@ -1,17 +1,26 @@
--- TimeWise — Stage 7 subscription entitlements (Stripe).
+-- TimeWise — Stage 7 subscription entitlements.
 -- Run after schema.sql, profiles.sql, push.sql, enhancements.sql and
--- product-requirements.sql. Stripe secrets never enter SQL or browser code.
+-- product-requirements.sql. Payment provider secrets never enter SQL or browser code.
+--
+-- Current active provider: Paystack (test/live). The table keeps legacy Stripe
+-- columns for backward compatibility; new writes use provider-neutral columns.
 
 -- One entitlement row per account. The browser can only READ this table;
--- every write comes from the Stripe webhook using the service role key.
+-- every write comes from the payment webhook using the service role key.
 create table if not exists public.subscriptions (
   user_id uuid primary key references public.profiles(id) on delete cascade,
+  provider text not null default 'paystack',
+  provider_customer_code text,
+  provider_subscription_code text,
+  provider_email_token text,
+  provider_reference text,
   stripe_customer_id text,
   stripe_subscription_id text,
   plan text not null default 'free' check (plan in ('free', 'pro')),
   status text not null default 'inactive' check (
     status in ('inactive', 'incomplete', 'incomplete_expired', 'trialing',
-               'active', 'past_due', 'canceled', 'unpaid', 'paused')
+               'active', 'past_due', 'canceled', 'unpaid', 'paused',
+               'non-renewing', 'attention', 'completed', 'cancelled')
   ),
   current_period_end timestamptz,
   cancel_at_period_end boolean not null default false,
@@ -25,6 +34,14 @@ create unique index if not exists subscriptions_customer_id_idx
 create unique index if not exists subscriptions_stripe_subscription_id_idx
   on public.subscriptions (stripe_subscription_id)
   where stripe_subscription_id is not null;
+
+create unique index if not exists subscriptions_provider_subscription_code_idx
+  on public.subscriptions (provider_subscription_code)
+  where provider_subscription_code is not null;
+
+create unique index if not exists subscriptions_provider_customer_code_idx
+  on public.subscriptions (provider_customer_code)
+  where provider_customer_code is not null;
 
 alter table public.subscriptions enable row level security;
 alter table public.subscriptions force row level security;
@@ -42,7 +59,7 @@ grant select on public.subscriptions to authenticated;
 grant select, insert, update, delete on public.subscriptions to service_role;
 
 -- Webhook replay protection. The Edge Function inserts the event id first;
--- a duplicate id means Stripe is retrying and can be acknowledged safely.
+-- a duplicate id means the provider is retrying and can be acknowledged safely.
 create table if not exists public.stripe_webhook_events (
   event_id text primary key,
   event_type text not null default '',

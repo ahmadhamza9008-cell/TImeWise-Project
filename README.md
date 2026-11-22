@@ -117,32 +117,30 @@ Setup:
 
 The Edge Function resolves the account's profile time zone (falling back to the subscription zone), respects the global mute / quiet hours / muted tags, checks each task's lead time, skips active snoozes, sends the push, and removes stale subscriptions scoped to the owning user. Remember to add `https://localhost/*` to Supabase redirect URLs for the Android WebView.
 
-## Subscriptions & payments (Stripe)
+## Subscriptions & payments (Paystack)
 
-Free includes 25 active tasks and 3 steps per task. Pro is unlimited. When Stripe is not configured, the app stays in **local-demo mode**: all limits are unlocked, the pricing page explains the demo, and no network calls are made. No card data ever reaches TimeWise — Checkout and the billing portal are hosted by Stripe.
+Free includes 25 active tasks and 3 steps per task. Pro is unlimited. When Paystack is not configured, the app stays in **local-demo mode**: all limits are unlocked, the pricing page explains the demo, and no network calls are made. No card data ever reaches TimeWise — payments happen on Paystack’s hosted checkout/management pages.
 
-Setup (use Stripe **test mode** first):
+Setup (use Paystack **test mode** first):
 
-1. Run `supabase/billing.sql` in the SQL Editor. It creates the read-only `subscriptions` table, the webhook replay table, and realtime publication.
-2. Create a recurring monthly Price in Stripe and copy its price ID.
+1. Run `supabase/billing.sql` in the SQL Editor for a fresh install, or `supabase/paystack.sql` after `billing.sql` for an existing install. This creates/updates the read-only `subscriptions` entitlement table, webhook replay table, and realtime publication.
+2. In Paystack, create a **Plan** for TimeWise Pro (monthly) and copy the plan code (`PLN_...`).
 3. Store secrets **only** in Supabase, never in browser files:
    ```bash
    supabase secrets set \
-     STRIPE_SECRET_KEY=sk_test_... \
-     STRIPE_PRICE_PRO=price_... \
-     STRIPE_WEBHOOK_SECRET=whsec_... \
+     PAYSTACK_SECRET_KEY=sk_test_... \
+     PAYSTACK_PLAN_CODE=PLN_... \
      SITE_URL=https://your-site.com
    ```
-   `SITE_URL` must be the deployed site's origin — it becomes the Checkout success/cancel and billing portal return URL.
-4. In Stripe, add a webhook endpoint at `https://<project-ref>.supabase.co/functions/v1/stripe-webhook` for these events:
-   `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`. Copy the endpoint signing secret into `STRIPE_WEBHOOK_SECRET`.
-5. Deploy the functions (JWT settings come from `supabase/config.toml`; only the webhook skips JWT verification because Stripe signs its own requests):
+   `SITE_URL` must be the deployed site's origin — it becomes the Paystack callback URL.
+4. In Paystack Dashboard → Settings → API Keys & Webhooks, add webhook URL `https://<project-ref>.supabase.co/functions/v1/paystack-webhook`. Paystack signs webhooks with your secret key (`x-paystack-signature`, HMAC SHA512).
+5. Deploy the functions (JWT settings come from `supabase/config.toml`; only the webhook skips JWT verification because Paystack signs its own requests):
    ```bash
-   supabase functions deploy create-checkout-session create-portal-session stripe-webhook --yes
+   supabase functions deploy initialize-paystack-payment manage-paystack-subscription paystack-webhook --yes
    ```
-6. Paste the Stripe **publishable** key (`pk_test_...` / `pk_live_...`) into `stripePublishableKey` in `assets/js/config.js`, bump the service-worker cache version in `sw.js`, then sync/redeploy the site.
+6. Paste the Paystack **public** key (`pk_test_...` / `pk_live_...`) into `paystackPublicKey` in `assets/js/config.js`, bump the service-worker cache version in `sw.js` if needed, then sync/redeploy the site.
 
-`create-checkout-session` and `create-portal-session` verify the signed-in user from the Supabase JWT. The webhook verifies the Stripe signature (HMAC-SHA256, 5-minute tolerance), rejects replays, and is the only writer of entitlements. Users see their plan on `settings.html` and can upgrade or manage billing from `pricing.html`.
+`initialize-paystack-payment` and `manage-paystack-subscription` verify the signed-in user from the Supabase JWT. `paystack-webhook` verifies the Paystack signature, rejects replays, and is the only writer of entitlements. Users see their plan on `settings.html` and can upgrade or manage billing from `pricing.html`.
 
 ## Native Android app (Capacitor)
 
@@ -194,7 +192,7 @@ The probe creates five temporary tasks, invokes the function, checks the results
 | 4. Task management & dashboard | Done |
 | 5. Planner, calendar & focus timer | Done |
 | 6. Supabase database & security | Done |
-| 7. Subscriptions & payments | Done — local-demo fallback plus Stripe Edge Functions |
+| 7. Subscriptions & payments | Done — local-demo fallback plus Paystack Edge Functions |
 | 8. Mobile application | Done — PWA + Capacitor Android wrapper |
 | 9. Testing & launch | Testing done — deployment artifacts in `docs/` |
 

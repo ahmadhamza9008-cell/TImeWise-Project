@@ -1,5 +1,6 @@
-// TimeWise — open the Stripe billing portal so users can change card or
-// cancel their Pro subscription. Requires STRIPE_SECRET_KEY and SITE_URL.
+// TimeWise — create a Paystack subscription management link.
+// Secrets: PAYSTACK_SECRET_KEY. The user manages card/cancel on Paystack's
+// hosted page; webhooks update the entitlement in our database.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -16,23 +17,12 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-function siteUrl(request: Request): string {
-  const candidate = (Deno.env.get('SITE_URL') || request.headers.get('Origin') || '').replace(/\/+$/, '');
-  try {
-    const parsed = new URL(candidate);
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') throw new Error('bad protocol');
-    return parsed.origin;
-  } catch (_) {
-    throw new Error('Billing is missing a valid SITE_URL. Set it in Supabase secrets.');
-  }
-}
-
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
 
   try {
-    const secretKey = Deno.env.get('STRIPE_SECRET_KEY');
+    const secretKey = Deno.env.get('PAYSTACK_SECRET_KEY');
     if (!secretKey) return json({ error: 'Billing is not configured yet.' }, 503);
 
     const jwt = (request.headers.get('Authorization') || '').match(/^Bearer\s+(.+)$/i)?.[1] || '';
@@ -49,33 +39,27 @@ Deno.serve(async (request) => {
 
     const { data: entitlement, error: lookupError } = await supabase
       .from('subscriptions')
-      .select('stripe_customer_id')
+      .select('provider_subscription_code, provider_email_token, status, plan')
       .eq('user_id', authData.user.id)
       .maybeSingle();
     if (lookupError) throw lookupError;
-    if (!entitlement?.stripe_customer_id) {
-      return json({ error: 'No billing account yet. Upgrade to Pro first.' }, 404);
+
+    const code = entitlement?.provider_subscription_code;
+    if (!code) {
+      return json({ error: 'No active Paystack subscription found yet. If you just paid, wait a moment for confirmation.' }, 404);
     }
 
-    const params = new URLSearchParams({
-      customer: entitlement.stripe_customer_id,
-      return_url: `${siteUrl(request)}/settings.html?billing=return`
-    });
-
-    const response = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${secretKey}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: params
+    const response = await fetch(`https://api.paystack.co/subscription/${encodeURIComponent(code)}/manage/link`, {
+      headers: { Authorization: `Bearer ${secretKey}` }
     });
     const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(payload?.error?.message || `Stripe request failed (${response.status}).`);
+    if (!response.ok || payload?.status === false) {
+      throw new Error(payload?.message || `Paystack request failed (${response.status}).`);
+    }
 
-    return json({ url: payload.url });
+    return json({ url: payload?.data?.link });
   } catch (error) {
-    console.error('create-portal-session failed', error);
+    console.error('manage-paystack-subscription failed', error);
     return json({ error: (error as Error).message || 'Could not open billing portal.' }, 500);
   }
 });

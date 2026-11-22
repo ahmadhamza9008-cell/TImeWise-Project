@@ -6,7 +6,7 @@ This guide covers the **v1.1.0** static PWA plus its Supabase backend and Capaci
 >
 > - `package.json` is version `1.1.0`; `android/app/build.gradle` has `versionName "1.1.0"` and `versionCode 2`.
 > - `sw.js` is `timewise-v8` and its `CORE_ASSETS` include `pricing.html`, `assets/css/pricing.css`, `assets/js/billing.js`, and `assets/js/pricing.js`. Bump the cache name on every web-asset release.
-> - A **Stripe subscription layer is present** and deployed to the linked Supabase project: `supabase/billing.sql`, `supabase/functions/create-checkout-session/`, `create-portal-session/`, `stripe-webhook/`, `assets/js/billing.js`, `assets/js/pricing.js`, `pricing.html`. It is **unconfigured in the browser by default** (`stripePublishableKey: ''` in `config.js`), so the app runs in local-demo mode with all limits unlocked. To activate payments, set Stripe Edge Function secrets and the publishable key. Stripe secret keys must never enter browser code.
+> - A **Paystack subscription layer is present** and deployed to the linked Supabase project: `supabase/billing.sql`, `supabase/paystack.sql`, `supabase/functions/initialize-paystack-payment/`, `manage-paystack-subscription/`, `paystack-webhook/`, `assets/js/billing.js`, `assets/js/pricing.js`, `pricing.html`. It is **unconfigured in the browser by default** (`paystackPublicKey: ''` in `config.js`), so the app runs in local-demo mode with all limits unlocked. To activate payments, set Paystack Edge Function secrets and the public key. Paystack secret keys must never enter browser code. Legacy DB identifiers (`stripe_webhook_events`, `stripe_*` columns) remain for compatibility.
 > - Local release helpers outside the repo: `/home/ahmad/tools/build-apk.sh` (debug) and `/home/ahmad/tools/build-release.sh` (signed release). Signing credentials live in `/home/ahmad/tools/timewise-signing.properties` and the keystore outside the repo.
 > - `assets/js/config.js` contains the working Supabase URL, publishable key, and VAPID public key for this environment. Replace them for a different deployment; these values are public by design and are cached by the service worker.
 
@@ -19,9 +19,9 @@ This guide covers the **v1.1.0** static PWA plus its Supabase backend and Capaci
 | Static web app | `*.html`, `assets/css/`, `assets/js/`, `assets/img/`, `manifest.webmanifest`, `sw.js` | Deploy these to the web root. No transpilation required. |
 | PWA layer | `sw.js`, `assets/js/pwa.js`, `manifest.webmanifest` | Service worker registers as `./sw.js`; keep it at the site root (or app subpath root) with the correct scope. |
 | Capacitor wrapper | `capacitor.config.json`, `android/` | `appId: com.timewise.app`, `webDir: www`, `androidScheme: https` → WebView origin is `https://localhost`. |
-| Supabase schema | `supabase/*.sql` | Apply in the order given in §5. Includes `billing.sql` for Stripe entitlements. |
-| Edge Functions | `supabase/functions/*` | `send-due-reminders` and `stripe-webhook` use `verify_jwt = false`; checkout/portal require a user JWT. |
-| Billing layer | `pricing.html`, `assets/js/billing.js`, `assets/js/pricing.js`, billing Edge Functions | Optional; active only when `stripePublishableKey` and Stripe secrets are set. Webhook is the only writer of the `subscriptions` table. |
+| Supabase schema | `supabase/*.sql` | Apply in the order given in §5. Includes `billing.sql` and `paystack.sql` for Paystack entitlements (legacy `stripe_*` DB names retained for compatibility). |
+| Edge Functions | `supabase/functions/*` | `send-due-reminders` and `paystack-webhook` use `verify_jwt = false`; initialize/manage require a user JWT. |
+| Billing layer | `pricing.html`, `assets/js/billing.js`, `assets/js/pricing.js`, billing Edge Functions | Optional; active only when `paystackPublicKey` and Paystack secrets are set. Webhook is the only writer of the `subscriptions` table. |
 | Tests | `tests/store.test.js`, `tests/settings.test.js`, `tests/smoke.py`, `tests/push-probe.js`, `tests/manual-checklist.md` | See §9. |
 
 ---
@@ -128,7 +128,7 @@ window.TimeWiseConfig = {
   supabaseAnonKey: 'sb_publishable_...',            // or legacy anon key; NEVER a service_role/secret key
   vapidPublicKey: '...',                            // safe to expose
   redirectUrl: 'https://app.example.com',           // optional; omit to derive from current page
-  stripePublishableKey: ''                          // pk_test_... / pk_live_...; blank = billing disabled
+  paystackPublicKey: ''                           // pk_test_... / pk_live_...; blank = billing disabled
 };
 ```
 
@@ -138,7 +138,7 @@ window.TimeWiseConfig = {
 | `supabaseAnonKey` | `assets/js/config.js` | Yes | Use `sb_publishable_...` (or legacy anon). RLS is the security boundary. |
 | `vapidPublicKey` | `assets/js/config.js` | Yes | Must match `VAPID_PUBLIC_KEY` in Edge Function secrets. Leave blank to hide the push UI. |
 | `redirectUrl` | `assets/js/config.js` | Yes | Origin/base URL used for auth redirects; each flow appends `dashboard.html`, `reset.html`, etc. Leave blank to use the current page. |
-| `stripePublishableKey` | `assets/js/config.js` | Yes | Set to `pk_live_...` to enable billing (Free: 25 active tasks / 3 subtasks per task; Pro: unlimited). Leave blank for local-demo mode with no limits enforced. Must be paired with Stripe secrets below. |
+| `paystackPublicKey` | `assets/js/config.js` | Yes | Set to `pk_test_...`/`pk_live_...` to enable billing (Free: 25 active tasks / 3 subtasks per task; Pro: unlimited). Leave blank for local-demo mode with no limits enforced. Must be paired with Paystack secrets below. |
 
 > Anything in `config.js` is shipped to every browser and cached by the service worker. Bump the SW cache name whenever these values change (§7).
 
@@ -152,7 +152,7 @@ window.TimeWiseConfig = {
 | `CRON_SECRET` | Supabase Edge Function secret **and** Supabase Vault (via `supabase/cron.sql`); shell env for external cron | Browser, repo |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Automatically injected into Supabase Edge Functions | Browser, repo |
 | `SUPABASE_SECRET_KEY` | Shell environment for `tests/push-probe.js` only | Browser, repo |
-| `STRIPE_SECRET_KEY`, `STRIPE_PRICE_PRO`, `STRIPE_WEBHOOK_SECRET`, `SITE_URL` | Supabase Edge Function secrets (see §5); `STRIPE_WEBHOOK_SECRET` comes from the Stripe webhook endpoint | Browser, repo, client config |
+| `PAYSTACK_SECRET_KEY`, `PAYSTACK_PLAN_CODE`, `SITE_URL` | Supabase Edge Function secrets (see §5) | Browser, repo, client config |
 
 Set function secrets with the CLI (run from the repo root; `supabase/config.toml` already declares `project_id` and `verify_jwt = false` for the function):
 
@@ -164,17 +164,16 @@ supabase secrets set \
   CRON_SECRET='<long-random-string>'
 ```
 
-If billing is enabled, add the Stripe secrets too (Edge Function secrets only — never `config.js`):
+If billing is enabled, add the Paystack secrets too (Edge Function secrets only — never `config.js`):
 
 ```bash
 supabase secrets set \
-  STRIPE_SECRET_KEY='sk_live_...' \
-  STRIPE_PRICE_PRO='price_...' \
-  STRIPE_WEBHOOK_SECRET='whsec_...' \
+  PAYSTACK_SECRET_KEY='sk_live_...' \
+  PAYSTACK_PLAN_CODE='PLN_...' \
   SITE_URL='https://app.example.com'
 ```
 
-`SITE_URL` is used by the checkout/portal functions to build `success_url`, `cancel_url`, and `return_url` (`/pricing.html?checkout=...` and `/settings.html?billing=return`). Register the Stripe webhook endpoint at `https://<PROJECT_REF>.supabase.co/functions/v1/stripe-webhook` for `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, and `customer.subscription.deleted`; copy its signing secret into `STRIPE_WEBHOOK_SECRET`. `supabase/config.toml` already sets `verify_jwt = false` for the webhook because Stripe cannot send a Supabase JWT.
+`SITE_URL` is used for the Paystack callback URL. Register the Paystack webhook endpoint at `https://<PROJECT_REF>.supabase.co/functions/v1/paystack-webhook` in Paystack Dashboard → Settings → API Keys & Webhooks. Paystack signs webhooks with `x-paystack-signature` (HMAC SHA512 using your secret key). `supabase/config.toml` sets `verify_jwt = false` for the webhook because Paystack cannot send a Supabase JWT.
 
 Passwords/keys for CI should be stored in the host's secret store (Netlify/Vercel/Cloudflare/GitHub Actions secrets), not committed. No build-time secrets are required for the static site.
 
@@ -196,7 +195,7 @@ Apply in this order:
 4. **`supabase/enhancements.sql`** — for projects created before v1.1: adds subtasks, plan order, reminder/snooze columns, focus sessions, and the theme column. It is written to be safe to re-run. Note: its temporary reminder check excludes `-1`; step 5 restores the "Never" option.
 5. **`supabase/product-requirements.sql`** — restores `reminder_minutes IN (-1, 0, 5, 10, 15, 30, 60)`, adds time-zone/notification preference columns, forces RLS on all four private tables, and reinstalls the ownership-safe focus-session foreign key.
 6. **Optional legacy helpers:** `supabase/recurring.sql` (only for pre-recurring projects; fresh projects already have `repeat` from `schema.sql`) and **`supabase/waitlist.sql`** (recommended: the landing page early-access form writes to `public.waitlist`; without it the form only confirms locally). `waitlist` intentionally allows anonymous `INSERT` and has no public `SELECT`.
-7. **`supabase/billing.sql` (Stripe migration).** Run after `product-requirements.sql`. Creates `public.subscriptions` (select-only for authenticated users; writes only by the service role), `public.stripe_webhook_events` for idempotency, and Realtime for plan changes. Skip only if you deliberately ship with billing disabled — but note `settings.html` still links to `pricing.html`.
+7. **`supabase/billing.sql` / `supabase/paystack.sql` (billing migration).** Run `billing.sql` after `product-requirements.sql` for a fresh install, or `paystack.sql` after `billing.sql` for an existing install. Creates/updates `public.subscriptions` (select-only for authenticated users; writes only by the service role), webhook replay table, and Realtime for plan changes.
 8. **Deploy the Edge Functions** from `supabase/functions/`:
 
    ```bash
@@ -207,13 +206,15 @@ Apply in this order:
    supabase functions deploy create-checkout-session --project-ref <PROJECT_REF>
    supabase functions deploy create-portal-session --project-ref <PROJECT_REF>
 
-   # Stripe webhook: JWT verification disabled; verified by Stripe signature inside the function
-   supabase functions deploy stripe-webhook --no-verify-jwt --project-ref <PROJECT_REF>
+   # Paystack webhook: JWT verification disabled; verified by Paystack signature inside the function
+   supabase functions deploy initialize-paystack-payment --project-ref <PROJECT_REF>
+   supabase functions deploy manage-paystack-subscription --project-ref <PROJECT_REF>
+   supabase functions deploy paystack-webhook --no-verify-jwt --project-ref <PROJECT_REF>
    ```
 
    These flags match `supabase/config.toml`.
 
-9. **Set Edge Function secrets** — run the `supabase secrets set ...` commands from §4.2. VAPID keys are generated with `npm run vapid:keys`; `CRON_SECRET` should be a long random value. For billing, set `STRIPE_SECRET_KEY`, `STRIPE_PRICE_PRO`, `STRIPE_WEBHOOK_SECRET`, and `SITE_URL`, then register the Stripe webhook endpoint described in §4.2. Without them, the billing functions return `503 "Billing is not configured yet."` and the browser stays in local-demo mode.
+9. **Set Edge Function secrets** — run the `supabase secrets set ...` commands from §4.2. VAPID keys are generated with `npm run vapid:keys`; `CRON_SECRET` should be a long random value. For billing, set `PAYSTACK_SECRET_KEY`, `PAYSTACK_PLAN_CODE`, and `SITE_URL`, then register the Paystack webhook endpoint described in §4.2. Without them, the billing functions return `503 "Billing is not configured yet."` and the browser stays in local-demo mode.
 10. **Configure pg_cron** — replace both placeholders in `supabase/cron.sql` (`REPLACE_WITH_PROJECT_REF`, `REPLACE_WITH_CRON_SECRET`), then run it in the SQL Editor. It enables `pg_cron`/`pg_net`, stores the function URL and secret in **Supabase Vault**, unschedules any old job, and schedules `timewise-send-due-reminders` every 5 minutes. Verify with:
 
     ```sql
@@ -311,8 +312,8 @@ Do **not** bump the cache name in `www/sw.js` or the Android copy directly — t
 | Bad Supabase schema change | SQL files are largely idempotent, but `product-requirements.sql` drops/recreates constraints and policies. Restore from a pre-migration `pg_dump` (or Supabase PITR) and re-run the remaining ordered steps. Never "undo" by hand-editing policies without verifying with §8.1-style RLS queries. |
 | Bad Edge Function version | Redeploy the last known-good `index.ts` from git: `supabase functions deploy send-due-reminders --no-verify-jwt`. Function secrets are independent of code, so leave them unchanged unless they were the cause. |
 | Bad cron behaviour | `select cron.unschedule('timewise-send-due-reminders');` to stop notifications, fix, then re-run `supabase/cron.sql` or re-schedule. |
-| Bad billing / entitlement state | Disable the Stripe webhook endpoint in Stripe, set `stripePublishableKey: ''` in `config.js` (all features unlock in demo mode) and bump the SW cache. Repair `public.subscriptions` from backup or via the webhook; the webhook is the only writer, so do not hand-edit entitlements except during an incident. Redeploy the last known-good billing functions and rotate `STRIPE_WEBHOOK_SECRET` if exposed. |
-| Leaked secret | Rotate immediately: `npm run vapid:keys` + update public key in `config.js`, re-set all VAPID secrets, rotate `CRON_SECRET` (and Vault copy), rotate Stripe keys/webhook secret, rotate the Supabase service/secret key if exposed, bump the SW cache, redeploy, then re-run the live probe. |
+| Bad billing / entitlement state | Disable the Paystack webhook endpoint in Paystack, set `paystackPublicKey: ''` in `config.js` (all features unlock in demo mode) and bump the SW cache. Repair `public.subscriptions` from backup or via the webhook; the webhook is the only writer, so do not hand-edit entitlements except during an incident. Redeploy the last known-good billing functions and rotate `PAYSTACK_SECRET_KEY` if exposed. |
+| Leaked secret | Rotate immediately: `npm run vapid:keys` + update public key in `config.js`, re-set all VAPID secrets, rotate `CRON_SECRET` (and Vault copy), rotate Paystack secret key, rotate the Supabase service/secret key if exposed, bump the SW cache, redeploy, then re-run the live probe. |
 
 After any rollback, re-run §9 smoke checks and the RLS verification queries.
 
@@ -422,8 +423,8 @@ curl -sS -o /dev/null -w '%{http_code}\n' -X POST \
   https://<PROJECT_REF>.supabase.co/functions/v1/create-checkout-session
 # Expected: 401 (or 503 "Billing is not configured yet." if secrets are absent)
 curl -sS -o /dev/null -w '%{http_code}\n' -X POST \
-  https://<PROJECT_REF>.supabase.co/functions/v1/stripe-webhook
-# Expected: 400 Invalid Stripe signature (or 503 if webhook secret is absent)
+  https://<PROJECT_REF>.supabase.co/functions/v1/paystack-webhook
+# Expected: 401 Invalid Paystack signature (or 503 if not configured)
 ```
 
 Work through `tests/manual-checklist.md` for the full pre-release pass (auth, RLS across two sessions, Realtime, calendar, insights, PWA install, Android WebView, accessibility). The live push probe creates five temporary tasks and deletes them; expect up to two test notifications on the registered device.
@@ -439,9 +440,9 @@ Work through `tests/manual-checklist.md` for the full pre-release pass (auth, RL
 | Edge Function invocations | Supabase Dashboard → Functions → `send-due-reminders` → Logs | `supabase functions logs send-due-reminders --project-ref <PROJECT_REF> --tail` |
 | Push delivery counters | Function JSON response | Alert if `failed` or `removedStale` spikes; `"error": "VAPID keys are not configured"` means secrets are missing. |
 | Cron health | `cron.job` / `cron.job_run_details` | See SQL below. |
-| Billing functions | Supabase Dashboard → Functions → `create-checkout-session`, `create-portal-session`, `stripe-webhook` → Logs | `supabase functions logs stripe-webhook --project-ref <PROJECT_REF> --tail`; watch for `503` (secrets missing), `400 Invalid Stripe signature`, and entitlement upsert failures. |
-| Stripe webhook health | Stripe Dashboard → Developers → Webhooks → endpoint; `public.stripe_webhook_events` | Confirm 200 responses, no retry storm, and one row per event id. |
-| Entitlement sanity | `public.subscriptions` | Spot-check that paid test users have `plan='pro'`, `status IN ('active','trialing')`, and a matching `stripe_subscription_id`. |
+| Billing functions | Supabase Dashboard → Functions → `initialize-paystack-payment`, `manage-paystack-subscription`, `paystack-webhook` → Logs | `supabase functions logs paystack-webhook --project-ref <PROJECT_REF> --tail`; watch for `503` (secrets missing), `401 Invalid Paystack signature`, and entitlement upsert failures. |
+| Paystack webhook health | Paystack Dashboard → Settings → API Keys & Webhooks; `public.stripe_webhook_events` replay table | Confirm 200 responses, no retry storm, and one row per event id. |
+| Entitlement sanity | `public.subscriptions` | Spot-check that paid test users have `plan='pro'`, `status IN ('active','attention','non-renewing')`, and a matching `provider_subscription_code`. |
 | Static availability | Host CDN/access logs + external uptime probe | Check `/`, `/sw.js`, `/manifest.webmanifest`, and one auth redirect URL. |
 | Browser errors | DevTools console / optional RUM tool | No analytics or error-reporting SDK is bundled; add one deliberately and update `privacy.html` if you do. |
 
@@ -460,7 +461,7 @@ select start_time, status, response
 ```
 
 ```sql
--- Recent Stripe events and the resulting entitlements (billing enabled)
+-- Recent Paystack webhook events and the resulting entitlements (billing enabled)
 select event_id, event_type, received_at
   from public.stripe_webhook_events
  order by received_at desc
@@ -472,7 +473,7 @@ select user_id, plan, status, current_period_end, cancel_at_period_end, updated_
  limit 20;
 ```
 
-Recommended operational alerts: any non-200 on the function health check, repeated `401` responses (cron secret mismatch), `failed > 0` over several runs, cron job `active = false`, Stripe webhook failures/retries, unexpected `plan='pro'` rows, and certificate expiry. Keep a privacy-friendly analytics plan in mind; the app currently contains none.
+Recommended operational alerts: any non-200 on the function health check, repeated `401` responses (cron secret mismatch), `failed > 0` over several runs, cron job `active = false`, Paystack webhook failures/retries, unexpected `plan='pro'` rows, and certificate expiry. Keep a privacy-friendly analytics plan in mind; the app currently contains none.
 
 ---
 
@@ -481,18 +482,18 @@ Recommended operational alerts: any non-200 on the function health check, repeat
 | # | Item | Evidence / command |
 | --- | --- | --- |
 | 1 | Static site deployed over HTTPS on final hostname | `curl -I https://app.example.com/` |
-| 2 | `config.js` has production URL, publishable key, VAPID public key, optional `redirectUrl`, and deliberate `stripePublishableKey` choice | Diff against environment plan; no secret keys present |
+| 2 | `config.js` has production URL, publishable key, VAPID public key, optional `redirectUrl`, and deliberate `paystackPublicKey` choice | Diff against environment plan; no secret keys present |
 | 3 | All SQL migrations applied in §5 order (including `billing.sql` if billing is on) | Tables visible in Table Editor; RLS queries in §8.1 pass |
 | 4 | Auth Site URL + all redirect URLs (including `https://localhost/*`) configured | Test signup, login, reset, OAuth if enabled |
 | 5 | All Edge Functions deployed with the right JWT flags; VAPID secrets match | 401 unauthenticated, JSON 200 with cron secret; `config.toml` review |
 | 6 | pg_cron job active every 5 minutes (or external cron live) | `cron.job` query + `job_run_details` |
-| 7 | If billing is on: Stripe secrets set, webhook endpoint registered for 4 events, `pricing.html` exists and is cached | Stripe webhook test event → `subscriptions` row → Settings shows plan; no `503` in logs |
-| 8 | If billing is off for Play: `stripePublishableKey: ''`, store copy does not promise paid tiers, Play Billing policy reviewed | See `STORE_LISTING.md` §8/§9 |
+| 7 | If billing is on: Paystack secrets set, webhook endpoint registered, `pricing.html` exists and is cached | Paystack test payment → `subscriptions` row → Settings shows plan; no `503` in logs |
+| 8 | If billing is off for Play: `paystackPublicKey: ''`, store copy does not promise paid tiers, Play Billing policy reviewed | See `STORE_LISTING.md` §8/§9 |
 | 9 | SW cache name bumped and generated copies synced (include `billing.js`/`pricing.html` if used) | `npm run web:sync` / `npm run cap:sync`; DevTools `caches.keys()` |
 | 10 | PWA install + offline shell verified | Install banner, standalone launch, offline load |
 | 11 | Unit/smoke/push-probe checks green | Commands in §9 |
 | 12 | Android release AAB/APK signed, versionCode bumped, keystore backed up outside repo | Android Studio / Gradle output |
-| 13 | Store listing, screenshots, privacy policy (incl. Stripe), terms, and content rating published | Links return 200; see `STORE_LISTING.md` |
+| 13 | Store listing, screenshots, privacy policy (incl. Paystack), terms, and content rating published | Links return 200; see `STORE_LISTING.md` |
 | 14 | Backup taken and restore drill completed | `pg_dump`/Supabase backup + Settings → Import / restore |
-| 15 | Monitoring/uptime alerts configured (incl. Stripe webhook) | Dashboard links + cron/function/webhook alerts |
+| 15 | Monitoring/uptime alerts configured (incl. Paystack webhook) | Dashboard links + cron/function/webhook alerts |
 | 16 | Rollback owner and previous deploy tagged | Previous deploy ID / git tag recorded |

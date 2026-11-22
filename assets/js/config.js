@@ -16,8 +16,8 @@ window.TimeWiseConfig = {
      reset.html). Leave blank to derive it from the current page. */
   redirectUrl: '',
 
-  /* Stripe publishable key (pk_test_... or pk_live_...). Safe in the browser.
+  /* Paystack public key (pk_test_... or pk_live_...). Safe in the browser.
      Leave blank to run the full local-demo experience with all limits unlocked.
-     Secret key, price ID and webhook secret belong ONLY in Supabase secrets. */
-  stripePublishableKey: ''
+     Secret key, plan code, and webhook secret belong ONLY in Supabase secrets. */
+  paystackPublicKey: ''
 };
