@@ -7,6 +7,11 @@ create table if not exists public.profiles (
   focus_minutes integer not null default 25 check (focus_minutes in (25, 50)),
   week_start text not null default 'monday' check (week_start in ('monday', 'sunday')),
   theme text not null default 'light' check (theme in ('light', 'dark')),
+  timezone text not null default '',
+  push_enabled boolean not null default true,
+  quiet_start text,
+  quiet_end text,
+  muted_tags jsonb not null default '[]'::jsonb,
   updated_at timestamptz not null default now()
 );
 
@@ -23,6 +28,12 @@ create policy "Users can insert their own profile"
 drop policy if exists "Users can update their own profile" on public.profiles;
 create policy "Users can update their own profile"
   on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
+
+drop policy if exists "Users can delete their own profile" on public.profiles;
+create policy "Users can delete their own profile"
+  on public.profiles for delete using (auth.uid() = id);
+
+alter table public.profiles force row level security;
 
 -- Give new accounts a profile using the name entered at sign-up.
 create or replace function public.timewise_new_profile()
@@ -50,5 +61,18 @@ drop trigger if exists timewise_profile_on_signup on auth.users;
 create trigger timewise_profile_on_signup
   after insert on auth.users
   for each row execute function public.timewise_new_profile();
+
+-- Realtime sync of preferences across the user's devices.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'profiles'
+  ) then
+    alter publication supabase_realtime add table public.profiles;
+  end if;
+exception when others then
+  null; -- Realtime is optional.
+end $$;
 
 notify pgrst, 'reload schema';

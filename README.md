@@ -64,6 +64,20 @@ A task can repeat daily, weekly, or monthly. Completing it does not mark it done
 - **Daily planning** — drag rows in Today's plan to set a custom order; the order is saved per account and used across devices.
 - **Dark theme** — switch under Settings → Preferences. The choice is stored locally and synced to your Supabase profile.
 
+## Product hardening
+
+The app now covers the seven core product requirements:
+
+- **Security** — RLS with `FORCE ROW LEVEL SECURITY` on every private table, ownership-safe focus sessions, per-user push endpoints, account-scoped browser cache, and no secret keys in client code.
+- **Synchronization** — Realtime for tasks, focus sessions and profiles (with full replica identity), debounced refetches, and refetch on tab focus/visibility.
+- **Time zones** — an IANA time zone in your profile drives the calendar day, display, and reminder evaluation on every device. The push subscription's zone is refreshed when the profile changes.
+- **Accessibility** — skip links, a live status region, keyboard plan reordering, focus-managed sidebar and notification dialog, named controls, and reduced-motion support.
+- **Performance** — small deferred-payload shell, a 1.5 s network-first timeout in the service worker, and no duplicate startup sync.
+- **Backup** — **Settings → Your data → Export all data (JSON)** saves tasks, subtasks, focus sessions and preferences; **Import / restore** merges or replaces them.
+- **Notifications** — per-task lead time including **Never**, an account-wide mute, quiet hours, and muted tags. These are enforced by the Edge Function and the in-app notification center.
+
+Run `supabase/product-requirements.sql` after the base SQL files to apply these schema and policy changes to an existing project.
+
 ## Mobile / PWA
 
 Service workers require `http://` or `https://`, so serve the folder instead of opening `file://`:
@@ -101,7 +115,7 @@ Setup:
    ```
 6. Open `settings.html` over `http://localhost` or HTTPS and click **Enable notifications**.
 
-The Edge Function reads each subscriber's timezone, checks their tasks against each task's lead time, skips active snoozes, sends the push, and removes stale subscriptions. Remember to add `https://localhost/*` to Supabase redirect URLs for the Android WebView.
+The Edge Function resolves the account's profile time zone (falling back to the subscription zone), respects the global mute / quiet hours / muted tags, checks each task's lead time, skips active snoozes, sends the push, and removes stale subscriptions scoped to the owning user. Remember to add `https://localhost/*` to Supabase redirect URLs for the Android WebView.
 
 ## Native Android app (Capacitor)
 
@@ -131,6 +145,16 @@ python3 tests/smoke.py
 ```
 
 See `tests/README.md` for details and `tests/manual-checklist.md` for the pre-release manual pass.
+
+For a live end-to-end check of reminder lead times and snooze handling, run the optional probe against the deployed Edge Function:
+
+```bash
+SUPABASE_URL=https://<ref>.supabase.co \
+SUPABASE_SECRET_KEY=sb_secret_... \
+node tests/push-probe.js
+```
+
+The probe creates five temporary tasks, invokes the function, checks the results, and deletes its own rows. It uses the existing push subscription, so up to two test notifications may arrive on the registered device. Keep the secret key out of browser code and out of version control.
 
 ## First release checklist
 

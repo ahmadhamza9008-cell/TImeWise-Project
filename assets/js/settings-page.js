@@ -78,6 +78,60 @@
     weekSelect.addEventListener('change', function () { Settings.set({ weekStart: weekSelect.value }); });
   }
 
+  // Time zone — offer every zone the browser knows, then the current value.
+  var timezoneInput = document.getElementById('timezone');
+  var timezoneOptions = document.getElementById('timezone-options');
+  if (timezoneOptions && typeof Intl !== 'undefined' && Intl.supportedValuesOf) {
+    try {
+      Intl.supportedValuesOf('timeZone').forEach(function (zone) {
+        var option = document.createElement('option');
+        option.value = zone;
+        timezoneOptions.appendChild(option);
+      });
+    } catch (e) { /* older browser — free text still works */ }
+  }
+
+  var pushEnabledInput = document.getElementById('push-enabled');
+  var quietEnabledInput = document.getElementById('quiet-enabled');
+  var quietStartInput = document.getElementById('quiet-start');
+  var quietEndInput = document.getElementById('quiet-end');
+  var mutedTagsInput = document.getElementById('muted-tags');
+
+  function renderNotificationPrefs(value) {
+    if (timezoneInput && document.activeElement !== timezoneInput) timezoneInput.value = value.timezone;
+    if (pushEnabledInput) pushEnabledInput.checked = value.pushEnabled !== false;
+    var quietOn = Boolean(value.quietStart && value.quietEnd);
+    if (quietEnabledInput) quietEnabledInput.checked = quietOn;
+    if (quietStartInput) quietStartInput.value = value.quietStart || '';
+    if (quietEndInput) quietEndInput.value = value.quietEnd || '';
+    if (mutedTagsInput && document.activeElement !== mutedTagsInput) {
+      mutedTagsInput.value = (value.mutedTags || []).join(', ');
+    }
+  }
+
+  function saveNotificationPrefs() {
+    if (!Settings) return;
+    var quietOn = quietEnabledInput && quietEnabledInput.checked;
+    Settings.set({
+      timezone: timezoneInput ? timezoneInput.value.trim() : '',
+      pushEnabled: pushEnabledInput ? pushEnabledInput.checked : true,
+      quietStart: quietOn && quietStartInput ? quietStartInput.value : '',
+      quietEnd: quietOn && quietEndInput ? quietEndInput.value : '',
+      mutedTags: mutedTagsInput
+        ? mutedTagsInput.value.split(',').map(function (tag) { return tag.trim(); }).filter(Boolean)
+        : []
+    });
+  }
+
+  if (Settings) {
+    Settings.subscribe(renderNotificationPrefs);
+    renderNotificationPrefs(Settings.get());
+    [timezoneInput, pushEnabledInput, quietEnabledInput, quietStartInput, quietEndInput, mutedTagsInput]
+      .forEach(function (input) {
+        if (input) input.addEventListener('change', saveNotificationPrefs);
+      });
+  }
+
   // Data
   var dataCount = document.getElementById('data-count');
   function renderDataCount() {
@@ -120,6 +174,57 @@
   }
   var exportButton = document.getElementById('export-btn');
   if (exportButton) exportButton.addEventListener('click', exportCsv);
+
+  // Full JSON backup — tasks, subtasks, focus sessions and preferences.
+  var exportJsonButton = document.getElementById('export-json-btn');
+  if (exportJsonButton) {
+    exportJsonButton.addEventListener('click', function () {
+      var data = Store.exportData ? Store.exportData() : { tasks: Store.getTasks(), sessions: Store.getSessions() };
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = 'timewise-backup-' + todayISO + '.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('Backup exported with ' + data.tasks.length + ' tasks and ' + data.sessions.length + ' focus sessions.');
+    });
+  }
+
+  var importButton = document.getElementById('import-btn');
+  var importFile = document.getElementById('import-file');
+  var importMode = document.getElementById('import-mode');
+  if (importButton && importFile) {
+    importButton.addEventListener('click', function () { importFile.click(); });
+    importFile.addEventListener('change', function () {
+      var file = importFile.files && importFile.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        var payload;
+        try {
+          payload = JSON.parse(String(reader.result));
+        } catch (e) {
+          showToast('That file is not valid JSON.');
+          return;
+        }
+        var mode = importMode && importMode.value === 'replace' ? 'replace' : 'merge';
+        try {
+          if (!Store.importData) throw new Error('Restore is unavailable in this build.');
+          var result = Store.importData(payload, mode);
+          if (payload.settings && Settings) Settings.applyRemote(payload.settings);
+          showToast('Restored ' + result.tasks + ' tasks and ' + result.sessions + ' focus sessions.');
+        } catch (e) {
+          showToast('Restore failed: ' + e.message);
+        }
+      };
+      reader.onerror = function () { showToast('Could not read that file.'); };
+      reader.readAsText(file);
+      importFile.value = '';
+    });
+  }
 
   function armButton(button, label, action) {
     var original = button.innerHTML;
@@ -222,12 +327,23 @@
     sidebar.classList.toggle('is-open', open);
     if (overlay) overlay.hidden = !open;
     if (menuBtn) menuBtn.setAttribute('aria-expanded', String(open));
+    // A closed off-canvas sidebar must leave the tab order, and focus must
+    // move in/out with it for keyboard and screen-reader users.
+    var offCanvas = window.innerWidth <= 860;
+    if ('inert' in sidebar) sidebar.inert = offCanvas && !open;
+    else sidebar.setAttribute('aria-hidden', String(offCanvas && !open));
+    if (offCanvas && open && closeBtn) closeBtn.focus();
+    else if (offCanvas && !open && sidebar.contains(document.activeElement) && menuBtn) menuBtn.focus();
   }
+  setSidebar(false);
   if (menuBtn) menuBtn.addEventListener('click', function () { setSidebar(true); });
   if (closeBtn) closeBtn.addEventListener('click', function () { setSidebar(false); });
   if (overlay) overlay.addEventListener('click', function () { setSidebar(false); });
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape') setSidebar(false); });
-  window.addEventListener('resize', function () { if (window.innerWidth > 860) setSidebar(false); });
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 860) setSidebar(false);
+    else if (sidebar && 'inert' in sidebar) sidebar.inert = !sidebar.classList.contains('is-open');
+  });
 
   window.addEventListener('timewise:error', function (event) { showToast(event.detail); });
 })();

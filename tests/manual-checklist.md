@@ -89,6 +89,12 @@ Run these after changes that affect UI or Supabase. Automated checks live in `st
 - Export CSV downloads all tasks with the new columns; Clear completed and Reset local data each need a second click. Reset also clears saved focus sessions.
 - Reset restores demo tasks but keeps preferences.
 - Account panel shows Local demo or the signed-in Supabase email; sign out works when connected.
+- Time zone can be set from the datalist; the chosen zone changes the dashboard greeting and follows the account across devices.
+- "Send me reminders" mutes every reminder on all devices; quiet hours and muted tags suppress only the matching reminders.
+- "Never" lead time on a task stops its reminders in both the bell and push, while the task still appears in the list.
+- Export all data (JSON) downloads tasks, subtasks, focus sessions and preferences; Import / restore brings them back with either Merge or Replace.
+- Skip-to-content link appears on keyboard focus on every page; Today's plan rows can be reordered with the ↑/↓ buttons and focus stays on the moved control.
+- The notification dialog receives focus when opened, closes with Escape, and returns focus to the bell.
 
 ## PWA / mobile
 

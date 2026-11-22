@@ -15,7 +15,7 @@ create table if not exists public.tasks (
   repeat text not null default 'none' check (repeat in ('none', 'daily', 'weekly', 'monthly')),
   subtasks jsonb not null default '[]'::jsonb,
   plan_order integer,
-  reminder_minutes integer not null default 10 check (reminder_minutes in (0, 5, 10, 15, 30, 60)),
+  reminder_minutes integer not null default 10 check (reminder_minutes in (-1, 0, 5, 10, 15, 30, 60)),
   snoozed_until timestamptz,
   done boolean not null default false,
   created_at timestamptz not null default now()
@@ -26,6 +26,10 @@ create index if not exists tasks_user_id_created_at_idx
 
 create index if not exists tasks_user_id_plan_order_idx
   on public.tasks (user_id, plan_order);
+
+-- Needed by the ownership-safe focus-session foreign key below.
+create unique index if not exists tasks_user_id_id_idx
+  on public.tasks (user_id, id);
 
 alter table public.tasks enable row level security;
 
@@ -63,6 +67,12 @@ create table if not exists public.focus_sessions (
 create index if not exists focus_sessions_user_id_idx
   on public.focus_sessions (user_id);
 
+-- A session may only point at a task owned by the same user.
+alter table public.focus_sessions
+  add constraint focus_sessions_owner_task_fkey
+  foreign key (user_id, task_id) references public.tasks (user_id, id)
+  on delete cascade;
+
 alter table public.focus_sessions enable row level security;
 
 drop policy if exists "Users can view their own focus sessions" on public.focus_sessions;
@@ -73,9 +83,22 @@ drop policy if exists "Users can insert their own focus sessions" on public.focu
 create policy "Users can insert their own focus sessions"
   on public.focus_sessions for insert with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update their own focus sessions" on public.focus_sessions;
+create policy "Users can update their own focus sessions"
+  on public.focus_sessions for update
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 drop policy if exists "Users can delete their own focus sessions" on public.focus_sessions;
 create policy "Users can delete their own focus sessions"
   on public.focus_sessions for delete using (auth.uid() = user_id);
+
+-- Realtime UPDATE/DELETE events need the full row so user_id filters match.
+alter table public.tasks replica identity full;
+alter table public.focus_sessions replica identity full;
+
+-- Defense in depth: RLS applies even to the table owner.
+alter table public.tasks force row level security;
+alter table public.focus_sessions force row level security;
 
 -- Allow Realtime to broadcast changes (safe with RLS enabled).
 -- Wrapped in an exception handler so an unavailable publication can never

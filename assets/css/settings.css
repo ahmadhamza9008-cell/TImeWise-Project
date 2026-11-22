@@ -86,7 +86,44 @@
   .settings-grid { grid-template-columns: 1fr; }
 }
 
+/* Notification controls + backup */
+.setting-group input[type="text"],
+.setting-group input[type="time"],
+.setting-group input[list] {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font-size: .86rem;
+}
+.check-row { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 14px; cursor: pointer; }
+.check-row input { margin-top: 3px; accent-color: var(--accent); }
+.check-row strong { display: block; font-size: .86rem; }
+.check-row small { display: block; margin-top: 2px; font-size: .74rem; color: var(--muted); }
+.quiet-times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+.quiet-times label { display: block; font-size: .78rem; font-weight: 600; color: var(--ink-soft); }
+.import-options { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.import-options label { font-size: .78rem; font-weight: 600; color: var(--ink-soft); }
+.import-options select {
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ink);
+  font-size: .8rem;
+}
+html[data-theme="dark"] .setting-group input[type="text"],
+html[data-theme="dark"] .setting-group input[type="time"],
+html[data-theme="dark"] .setting-group input[list],
+html[data-theme="dark"] .import-options select { background: #0f172a; color: #e2e8f0; }
+html[data-theme="dark"] .setting-group { border-bottom-color: #1e293b; }
+
 @media (max-width: 560px) {
   .profile-row { flex-direction: column; }
   .radio-cards { grid-template-columns: 1fr; }
+  .quiet-times { grid-template-columns: 1fr; }
 }

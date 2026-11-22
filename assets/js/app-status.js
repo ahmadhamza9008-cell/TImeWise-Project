@@ -9,6 +9,7 @@
     if (!badge) return;
     badge.textContent = label;
     badge.dataset.state = state;
+    if (window.TimeWiseAnnounce) window.TimeWiseAnnounce(label);
   }
 
   if (window.TimeWiseBackend && window.TimeWiseBackend.isConfigured()) {

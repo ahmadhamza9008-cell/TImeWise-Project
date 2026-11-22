@@ -9,13 +9,36 @@ window.TimeWiseStore = (function () {
   var LEGACY_KEY = 'timewise_dashboard_tasks';
   var SESSIONS_KEY = 'timewise_focus_sessions';
   var REPEAT_VALUES = ['none', 'daily', 'weekly', 'monthly'];
-  var REMINDER_VALUES = [0, 5, 10, 15, 30, 60];
+  var REMINDER_VALUES = [-1, 0, 5, 10, 15, 30, 60]; // -1 = never remind
   var Backend = window.TimeWiseBackend;
 
+  // "Today" follows the account's chosen IANA time zone so every device and
+  // the reminder job agree on the calendar day.
+  function zoneToday() {
+    try {
+      var Settings = window.TimeWiseSettings;
+      var zone = (Settings && Settings.get().timezone) || 'UTC';
+      if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
+        var parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit'
+        }).formatToParts(new Date());
+        var value = function (type) {
+          var found = parts.filter(function (part) { return part.type === type; })[0];
+          return found ? found.value : '';
+        };
+        return value('year') + '-' + value('month') + '-' + value('day');
+      }
+    } catch (e) { /* fall back to browser local date */ }
+    return dateToISO(new Date());
+  }
+
   function isoDate(offsetDays) {
-    var date = new Date();
-    date.setDate(date.getDate() + (offsetDays || 0));
-    return dateToISO(date);
+    var base = zoneToday();
+    var date = new Date(Date.UTC(
+      Number(base.slice(0, 4)), Number(base.slice(5, 7)) - 1,
+      Number(base.slice(8, 10)) + (offsetDays || 0)
+    ));
+    return date.toISOString().slice(0, 10);
   }
 
   function dateToISO(date) {
@@ -98,31 +121,37 @@ window.TimeWiseStore = (function () {
 
   function loadLocal() {
     try {
-      var raw = localStorage.getItem(KEY) || localStorage.getItem(LEGACY_KEY);
-      if (!raw) return defaults().map(normalize);
+      var raw = localStorage.getItem(keyFor(KEY)) || localStorage.getItem(keyFor(LEGACY_KEY));
+      if (!raw) return currentUserId ? [] : defaults().map(normalize);
       var parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed.map(normalize) : defaults().map(normalize);
-    } catch (e) {
-      return defaults().map(normalize);
-    }
+      if (Array.isArray(parsed)) return parsed.map(normalize);
+    } catch (e) { /* fall through */ }
+    return currentUserId ? [] : defaults().map(normalize);
   }
 
+  var currentUserId = null;
   var tasks = loadLocal();
   var sessions = loadSessions();
   var listeners = [];
   var remoteReady = false;
   var syncing = false;
 
+  // Storage is namespaced by account so one signed-in user can never see
+  // another user's cached data on a shared browser.
+  function keyFor(base) {
+    return currentUserId ? base + ':' + currentUserId : base;
+  }
+
   function persistLocal() {
     try {
-      localStorage.setItem(KEY, JSON.stringify(tasks));
-      localStorage.removeItem(LEGACY_KEY);
+      localStorage.setItem(keyFor(KEY), JSON.stringify(tasks));
+      localStorage.removeItem(keyFor(LEGACY_KEY));
     } catch (e) { /* storage unavailable */ }
   }
 
   function loadSessions() {
     try {
-      var raw = localStorage.getItem(SESSIONS_KEY);
+      var raw = localStorage.getItem(keyFor(SESSIONS_KEY));
       var parsed = raw ? JSON.parse(raw) : [];
       return Array.isArray(parsed) ? parsed.map(normalizeSession) : [];
     } catch (e) {
@@ -131,7 +160,7 @@ window.TimeWiseStore = (function () {
   }
 
   function persistSessions() {
-    try { localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions)); } catch (e) { /* storage unavailable */ }
+    try { localStorage.setItem(keyFor(SESSIONS_KEY), JSON.stringify(sessions)); } catch (e) { /* storage unavailable */ }
   }
 
   function emit() {
@@ -197,6 +226,7 @@ window.TimeWiseStore = (function () {
           }
           sessions = remote.map(normalizeSession);
           persistSessions();
+          emit();
         });
       })
       .catch(function (error) { reportError('Could not sync tasks: ' + error.message); })
@@ -344,6 +374,76 @@ window.TimeWiseStore = (function () {
     return Object.assign({}, session);
   }
 
+  // Full, lossless backup payload (tasks, subtasks, focus sessions, settings).
+  function exportData() {
+    var Settings = window.TimeWiseSettings;
+    return {
+      app: 'TimeWise',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      tasks: getTasks(),
+      sessions: getSessions(),
+      settings: Settings ? Settings.get() : null
+    };
+  }
+
+  // Restore from a backup. mode 'replace' overwrites current data; 'merge'
+  // adds anything missing while keeping existing rows.
+  function importData(payload, mode) {
+    if (!payload || typeof payload !== 'object' || !Array.isArray(payload.tasks)) {
+      throw new Error('That file is not a TimeWise backup.');
+    }
+    var incomingTasks = payload.tasks.map(normalize);
+    var incomingSessions = Array.isArray(payload.sessions)
+      ? payload.sessions.map(normalizeSession) : [];
+    var previousTaskIds = tasks.map(function (task) { return task.id; });
+
+    if (mode === 'replace') {
+      tasks = incomingTasks;
+      sessions = incomingSessions;
+    } else {
+      var taskIds = {};
+      tasks = tasks.concat(incomingTasks).filter(function (task) {
+        if (taskIds[task.id]) return false;
+        taskIds[task.id] = true;
+        return true;
+      });
+      var sessionIds = {};
+      sessions = sessions.concat(incomingSessions).filter(function (session) {
+        if (sessionIds[session.id]) return false;
+        sessionIds[session.id] = true;
+        return true;
+      });
+    }
+
+    persistLocal();
+    persistSessions();
+    emit();
+
+    // Mirror the restore into Supabase so other devices see it too.
+    if (remoteReady && Backend) {
+      if (mode === 'replace') {
+        previousTaskIds.forEach(function (id) {
+          if (!tasks.some(function (task) { return task.id === id; })) {
+            Backend.deleteTask(id).catch(function () { /* keep local row */ });
+          }
+        });
+      }
+      tasks.forEach(function (task) {
+        var write = isUuid(task.id)
+          ? Backend.updateTask(task.id, task)
+          : Backend.insertTask(task);
+        Promise.resolve(write).catch(function () { /* keep local row */ });
+      });
+      if (Backend.insertSession) {
+        sessions.forEach(function (session) {
+          Promise.resolve(Backend.insertSession(session)).catch(function () { /* keep local row */ });
+        });
+      }
+    }
+    return { tasks: tasks.length, sessions: sessions.length };
+  }
+
   function subscribe(listener) {
     listeners.push(listener);
     return function () {
@@ -351,27 +451,68 @@ window.TimeWiseStore = (function () {
     };
   }
 
+  var syncStartedFor = null;
+
+  function setUser(userId) {
+    if (userId === currentUserId) return;
+    currentUserId = userId;
+    remoteReady = false;
+    if (userId !== syncStartedFor) syncStartedFor = null;
+    tasks = loadLocal();
+    sessions = loadSessions();
+    emit();
+  }
+
+  // Realtime can emit a burst of events for a single bulk update (e.g. a
+  // reorder). Debounce so we refetch once instead of once per row.
+  var syncTimer = null;
+  function debouncedSync() {
+    if (typeof setTimeout === 'undefined') return syncFromRemote();
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function () { syncFromRemote(); }, 250);
+  }
+
+  function isUuid(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value));
+  }
+
+  function startSync(session) {
+    if (!session || !session.user || syncStartedFor === session.user.id) return;
+    syncStartedFor = session.user.id;
+    setUser(session.user.id);
+    syncFromRemote();
+    Backend.subscribeTasks(debouncedSync);
+  }
+
   // React to authentication changes
   if (Backend) {
     if (Backend.onAuthChange) {
       Backend.onAuthChange(function (session) {
-        if (session) {
-          syncFromRemote();
-          Backend.subscribeTasks(syncFromRemote);
-        } else {
+        if (session && session.user) startSync(session);
+        else {
+          setUser(null);
+          syncStartedFor = null;
           remoteReady = false;
-          tasks = loadLocal();
-          sessions = loadSessions();
-          emit();
         }
       });
     }
 
     Backend.getSession().then(function (session) {
-      if (!session) return;
-      syncFromRemote();
-      Backend.subscribeTasks(syncFromRemote);
+      if (session && session.user) startSync(session);
     });
+  }
+
+  // Refetch when the tab becomes visible so another device's changes still
+  // appear if the realtime socket was dropped.
+  if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('focus', function () {
+      if (remoteReady && Backend) syncFromRemote();
+    });
+    if (typeof document !== 'undefined' && document.addEventListener) {
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden && remoteReady && Backend) syncFromRemote();
+      });
+    }
   }
 
   return {
@@ -386,6 +527,9 @@ window.TimeWiseStore = (function () {
     getSessions: getSessions,
     addSession: addSession,
     clearCompleted: clearCompleted,
+    exportData: exportData,
+    importData: importData,
+    setUser: setUser,
     subscribe: subscribe,
     today: function () { return isoDate(0); },
     isToday: function (task) { return !task.due || task.due === isoDate(0); }

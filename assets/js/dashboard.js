@@ -4,6 +4,10 @@
 (function () {
   'use strict';
 
+  function prefersReducedMotion() {
+    return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
   var Store = window.TimeWiseStore;
 
   function escapeHtml(value) {
@@ -66,7 +70,7 @@
       li.className = 'task-item' + (task.done ? ' done' : '');
       li.dataset.id = task.id;
       li.draggable = true;
-      li.title = 'Drag to reorder your plan';
+      li.title = 'Drag or use the arrow buttons to reorder your plan';
       li.innerHTML =
         '<button class="task-check" type="button" aria-pressed="' + task.done + '" aria-label="' +
           (task.done ? 'Mark as not done: ' : 'Mark as done: ') + safeTitle + '">' +
@@ -82,6 +86,10 @@
               : '') +
           '</span>' +
         '</div>' +
+        '<span class="plan-move">' +
+          '<button class="task-move" type="button" data-dir="up" aria-label="Move ' + safeTitle + ' up in plan">↑</button>' +
+          '<button class="task-move" type="button" data-dir="down" aria-label="Move ' + safeTitle + ' down in plan">↓</button>' +
+        '</span>' +
         '<button class="task-delete" type="button" aria-label="Delete ' + safeTitle + '">' +
           '<svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>' +
         '</button>';
@@ -104,6 +112,19 @@
       } else if (event.target.closest('.task-delete')) {
         Store.deleteTask(id);
         showToast('Task removed.');
+      } else {
+        var move = event.target.closest('.task-move');
+        if (move) {
+          var ids = Array.prototype.map.call(list.querySelectorAll('.task-item'), function (item) { return item.dataset.id; });
+          var from = ids.indexOf(id);
+          var to = from + (move.dataset.dir === 'up' ? -1 : 1);
+          if (from < 0 || to < 0 || to >= ids.length) return;
+          ids.splice(to, 0, ids.splice(from, 1)[0]);
+          Store.reorderTasks(ids);
+          showToast('Plan reordered: ' + (move.dataset.dir === 'up' ? 'moved up.' : 'moved down.'));
+          var restored = list.querySelector('[data-id="' + id + '"] .task-move[data-dir="' + move.dataset.dir + '"]');
+          if (restored) restored.focus();
+        }
       }
     });
   }
@@ -268,7 +289,9 @@
     duration = minutes;
     remaining = minutes * 60;
     durationButtons.forEach(function (button) {
-      button.classList.toggle('active', Number(button.dataset.minutes) === minutes);
+      var selected = Number(button.dataset.minutes) === minutes;
+      button.classList.toggle('active', selected);
+      button.setAttribute('aria-pressed', String(selected));
     });
     updateTimer();
   }
@@ -422,7 +445,7 @@
   if (focusShortcut && timerToggle) {
     focusShortcut.addEventListener('click', function () {
       if (!timerId) timerToggle.click();
-      if (timerRing && timerRing.scrollIntoView) timerRing.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (timerRing && timerRing.scrollIntoView) timerRing.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' });
     });
   }
 
@@ -437,13 +460,24 @@
     sidebar.classList.toggle('is-open', open);
     if (overlay) overlay.hidden = !open;
     if (menuBtn) menuBtn.setAttribute('aria-expanded', String(open));
+    // A closed off-canvas sidebar must leave the tab order, and focus must
+    // move in/out with it for keyboard and screen-reader users.
+    var offCanvas = window.innerWidth <= 860;
+    if ('inert' in sidebar) sidebar.inert = offCanvas && !open;
+    else sidebar.setAttribute('aria-hidden', String(offCanvas && !open));
+    if (offCanvas && open && closeBtn) closeBtn.focus();
+    else if (offCanvas && !open && sidebar.contains(document.activeElement) && menuBtn) menuBtn.focus();
   }
+  setSidebar(false);
 
   if (menuBtn) menuBtn.addEventListener('click', function () { setSidebar(true); });
   if (closeBtn) closeBtn.addEventListener('click', function () { setSidebar(false); });
   if (overlay) overlay.addEventListener('click', function () { setSidebar(false); });
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape') setSidebar(false); });
-  window.addEventListener('resize', function () { if (window.innerWidth > 860) setSidebar(false); });
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 860) setSidebar(false);
+    else if (sidebar && 'inert' in sidebar) sidebar.inert = !sidebar.classList.contains('is-open');
+  });
 
   // Placeholder actions until later checklist items are built
   document.querySelectorAll('[data-soon]').forEach(function (link) {

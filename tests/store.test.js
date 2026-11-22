@@ -46,7 +46,7 @@ function createStore(storage) {
   };
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync(STORE_PATH, 'utf8'), sandbox, { filename: STORE_PATH });
-  return { store: sandbox.window.TimeWiseStore, storage: sandbox.localStorage };
+  return { store: sandbox.window.TimeWiseStore, storage: sandbox.localStorage, env: sandbox };
 }
 
 const results = [];
@@ -261,6 +261,67 @@ test('focus sessions are added, listed, and persisted', () => {
   assert.strictEqual(store.getSessions()[0].id, session.id);
   assert.strictEqual(store.getSessions()[0].durationMinutes, 25);
   assert.ok(JSON.parse(storage.getItem('timewise_focus_sessions')).length === 1);
+});
+
+test('a reminder value of -1 means never remind', () => {
+  const { store } = createStore();
+  assert.strictEqual(store.addTask({ title: 'No alerts', reminderMinutes: -1 }).reminderMinutes, -1);
+});
+
+test('exportData includes tasks, sessions and settings', () => {
+  const { store, env } = createStore();
+  env.window.TimeWiseSettings = { get: () => ({ name: 'Ada', timezone: 'Africa/Lagos', mutedTags: ['Admin'] }) };
+  store.addTask({ title: 'Backed up', subtasks: [{ id: 's1', title: 'Step', done: true }] });
+  store.addSession({ taskTitle: 'Focus', durationMinutes: 50 });
+  const data = store.exportData();
+  assert.strictEqual(data.app, 'TimeWise');
+  assert.strictEqual(data.version, 1);
+  assert.ok(data.exportedAt);
+  assert.strictEqual(data.tasks.length, 6);
+  assert.strictEqual(data.tasks[0].subtasks[0].title, 'Step');
+  assert.strictEqual(data.sessions.length, 1);
+  assert.strictEqual(data.settings.name, 'Ada');
+});
+
+test('importData merge keeps existing tasks and adds missing ones', () => {
+  const { store } = createStore();
+  const before = store.getTasks().length;
+  const backup = {
+    tasks: [{ id: 'restored-1', title: 'Restored', due: '', time: '09:00' }],
+    sessions: [{ id: 'restored-session', taskTitle: 'Old focus', durationMinutes: 25 }]
+  };
+  const result = store.importData(backup, 'merge');
+  assert.strictEqual(result.tasks, before + 1);
+  assert.strictEqual(store.getTasks().length, before + 1);
+  assert.strictEqual(store.getSessions().length, 1);
+  assert.ok(store.getTasks().some((task) => task.title === 'Restored'));
+});
+
+test('importData replace overwrites current data', () => {
+  const { store } = createStore();
+  const backup = { tasks: [{ id: 'only', title: 'Only task', due: '' }], sessions: [] };
+  const result = store.importData(backup, 'replace');
+  assert.strictEqual(result.tasks, 1);
+  assert.deepStrictEqual(store.getTasks().map((task) => task.title), ['Only task']);
+});
+
+test('importData rejects invalid files', () => {
+  const { store } = createStore();
+  assert.throws(() => store.importData(null, 'merge'), /not a TimeWise backup/);
+  assert.throws(() => store.importData({ sessions: [] }, 'merge'), /not a TimeWise backup/);
+});
+
+test('setUser namespaces cached data by account', () => {
+  const initial = { 'timewise_tasks': JSON.stringify([{ id: 'mine', title: 'My task', due: '' }]) };
+  const { store, storage } = createStore(makeStorage(initial));
+  assert.strictEqual(store.getTasks()[0].title, 'My task');
+  store.setUser('user-123');
+  assert.strictEqual(store.getTasks().length, 0);
+  store.addTask({ title: 'Account task' });
+  assert.ok(storage.getItem('timewise_tasks:user-123'));
+  store.setUser(null);
+  assert.strictEqual(store.getTasks()[0].title, 'My task');
+  assert.ok(storage.getItem('timewise_tasks'));
 });
 
 const failed = results.filter((result) => !result.ok);

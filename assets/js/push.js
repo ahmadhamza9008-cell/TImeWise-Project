@@ -27,6 +27,28 @@
     );
   }
 
+  function currentTimezone() {
+    var Settings = window.TimeWiseSettings;
+    var zone = Settings && Settings.get().timezone;
+    return zone || (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+  }
+
+  // Keep the server-side reminder zone in sync when the profile zone changes
+  // (including when the user travels or switches devices).
+  function refreshTimezone() {
+    if (!supported() || !Backend || !Backend.savePushSubscription) return Promise.resolve();
+    return navigator.serviceWorker.ready
+      .then(function (registration) { return registration.pushManager.getSubscription(); })
+      .then(function (subscription) {
+        if (!subscription) return null;
+        return Backend.savePushSubscription(subscription, currentTimezone());
+      })
+      .catch(function () { return null; });
+  }
+
+  window.addEventListener('timewise:profile-changed', refreshTimezone);
+  window.addEventListener('focus', refreshTimezone);
+
   function urlBase64ToUint8Array(base64String) {
     var padding = '='.repeat((4 - base64String.length % 4) % 4);
     var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -87,7 +109,7 @@
         });
       }).then(function (subscription) {
         if (!Backend || !Backend.savePushSubscription) throw new Error('Backend is unavailable.');
-        var timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+        var timezone = currentTimezone();
         return Backend.savePushSubscription(subscription, timezone).then(function () {
           showToast('Push notifications enabled.');
           return refresh();
@@ -129,5 +151,5 @@
     refresh();
   }
 
-  window.TimeWisePush = { init: init, refresh: refresh };
+  window.TimeWisePush = { init: init, refresh: refresh, refreshTimezone: refreshTimezone };
 })();

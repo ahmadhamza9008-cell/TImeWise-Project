@@ -216,6 +216,7 @@
                 <div class="field">
                   <label for="task-reminder">Remind me</label>
                   <select id="task-reminder" name="reminderMinutes">
+                    <option value="-1">Never</option>
                     <option value="0">At the due time</option>
                     <option value="5">5 minutes before</option>
                     <option value="10" selected>10 minutes before</option>
@@ -227,8 +228,8 @@
                 </div>
 
                 <div class="field">
-                  <label>Subtasks <span class="optional">optional</span></label>
-                  <div class="subtask-editor" id="subtask-editor"></div>
+                  <label for="add-subtask">Subtasks <span class="optional">optional</span></label>
+                  <div class="subtask-editor" id="subtask-editor" role="group" aria-label="Subtasks"></div>
                   <button class="btn btn-ghost btn-sm" type="button" id="add-subtask">+ Add step</button>
                 </div>
 
@@ -263,6 +264,7 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/a11y.js" defer></script>
   <script src="assets/js/config.js" defer></script>
   <script src="assets/js/supabase.js" defer></script>
   <script src="assets/js/store.js" defer></script>

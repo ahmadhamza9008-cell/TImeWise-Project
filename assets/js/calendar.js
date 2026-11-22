@@ -217,12 +217,23 @@
     sidebar.classList.toggle('is-open', open);
     if (overlay) overlay.hidden = !open;
     if (menuBtn) menuBtn.setAttribute('aria-expanded', String(open));
+    // A closed off-canvas sidebar must leave the tab order, and focus must
+    // move in/out with it for keyboard and screen-reader users.
+    var offCanvas = window.innerWidth <= 860;
+    if ('inert' in sidebar) sidebar.inert = offCanvas && !open;
+    else sidebar.setAttribute('aria-hidden', String(offCanvas && !open));
+    if (offCanvas && open && closeBtn) closeBtn.focus();
+    else if (offCanvas && !open && sidebar.contains(document.activeElement) && menuBtn) menuBtn.focus();
   }
+  setSidebar(false);
   if (menuBtn) menuBtn.addEventListener('click', function () { setSidebar(true); });
   if (closeBtn) closeBtn.addEventListener('click', function () { setSidebar(false); });
   if (overlay) overlay.addEventListener('click', function () { setSidebar(false); });
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape') setSidebar(false); });
-  window.addEventListener('resize', function () { if (window.innerWidth > 860) setSidebar(false); });
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 860) setSidebar(false);
+    else if (sidebar && 'inert' in sidebar) sidebar.inert = !sidebar.classList.contains('is-open');
+  });
 
   document.querySelectorAll('[data-soon]').forEach(function (link) {
     link.addEventListener('click', function (event) { event.preventDefault(); showToast(link.dataset.soon); });

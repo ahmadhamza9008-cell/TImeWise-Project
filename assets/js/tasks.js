@@ -4,6 +4,10 @@
 (function () {
   'use strict';
 
+  function prefersReducedMotion() {
+    return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
   var Store = window.TimeWiseStore;
   var activeFilter = 'all';
 
@@ -111,8 +115,9 @@
           (task.subtasks && task.subtasks.length
             ? '<ul class="subtask-checklist">' + task.subtasks.map(function (step) {
                 return '<li><button class="subtask-check' + (step.done ? ' done' : '') + '" type="button" data-subtask-id="' +
-                  escapeHtml(step.id) + '" aria-pressed="' + step.done + '">' + (step.done ? '✓' : '') +
-                  '</button><span>' + escapeHtml(step.title) + '</span></li>';
+                  escapeHtml(step.id) + '" aria-pressed="' + step.done + '" aria-label="' +
+                  (step.done ? 'Mark incomplete: ' : 'Mark complete: ') + escapeHtml(step.title) + '">' +
+                  (step.done ? '✓' : '') + '</button><span>' + escapeHtml(step.title) + '</span></li>';
               }).join('') + '</ul>'
             : '') +
           (task.notes ? '<p class="task-notes">' + escapeHtml(task.notes) + '</p>' : '') +
@@ -191,9 +196,14 @@
 
   // Filters, search and sorting
   document.querySelectorAll('.filter-tabs button').forEach(function (button) {
+    button.setAttribute('aria-pressed', String(button.classList.contains('active')));
     button.addEventListener('click', function () {
-      document.querySelectorAll('.filter-tabs button').forEach(function (other) { other.classList.remove('active'); });
+      document.querySelectorAll('.filter-tabs button').forEach(function (other) {
+        other.classList.remove('active');
+        other.setAttribute('aria-pressed', 'false');
+      });
       button.classList.add('active');
+      button.setAttribute('aria-pressed', 'true');
       activeFilter = button.dataset.filter;
       render();
     });
@@ -224,6 +234,7 @@
     input.type = 'text';
     input.className = 'subtask-title';
     input.placeholder = 'Step description';
+    input.setAttribute('aria-label', 'Subtask description');
     input.value = title || '';
     var remove = document.createElement('button');
     remove.type = 'button';
@@ -301,7 +312,7 @@
     if (submitButton) submitButton.textContent = 'Save changes';
     if (cancelButton) cancelButton.hidden = false;
     titleInput.focus();
-    if (form && form.scrollIntoView) form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (form && form.scrollIntoView) form.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'nearest' });
   }
 
   if (form) {
@@ -381,12 +392,23 @@
     sidebar.classList.toggle('is-open', open);
     if (overlay) overlay.hidden = !open;
     if (menuBtn) menuBtn.setAttribute('aria-expanded', String(open));
+    // A closed off-canvas sidebar must leave the tab order, and focus must
+    // move in/out with it for keyboard and screen-reader users.
+    var offCanvas = window.innerWidth <= 860;
+    if ('inert' in sidebar) sidebar.inert = offCanvas && !open;
+    else sidebar.setAttribute('aria-hidden', String(offCanvas && !open));
+    if (offCanvas && open && closeBtn) closeBtn.focus();
+    else if (offCanvas && !open && sidebar.contains(document.activeElement) && menuBtn) menuBtn.focus();
   }
+  setSidebar(false);
 
   if (menuBtn) menuBtn.addEventListener('click', function () { setSidebar(true); });
   if (closeBtn) closeBtn.addEventListener('click', function () { setSidebar(false); });
   if (overlay) overlay.addEventListener('click', function () { setSidebar(false); });
-  window.addEventListener('resize', function () { if (window.innerWidth > 860) setSidebar(false); });
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 860) setSidebar(false);
+    else if (sidebar && 'inert' in sidebar) sidebar.inert = !sidebar.classList.contains('is-open');
+  });
 
   document.addEventListener('keydown', function (event) {
     if (event.key !== 'Escape') return;

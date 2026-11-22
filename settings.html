@@ -177,6 +177,42 @@
                 </select>
                 <p class="field-hint">Used by the Calendar and Insights week views.</p>
               </div>
+
+              <div class="setting-group">
+                <label for="timezone">Time zone</label>
+                <input id="timezone" list="timezone-options" autocomplete="off" placeholder="Africa/Lagos">
+                <datalist id="timezone-options"></datalist>
+                <p class="field-hint">Schedules and reminders use this time zone on every device. Leave the device default selected to follow your browser.</p>
+              </div>
+            </section>
+
+            <section class="panel" aria-labelledby="reminders-title">
+              <div class="panel-head">
+                <div><h2 id="reminders-title">Reminder controls</h2><p>Choose which reminders you receive.</p></div>
+              </div>
+
+              <label class="check-row" for="push-enabled">
+                <input type="checkbox" id="push-enabled">
+                <span><strong>Send me reminders</strong><small>Turn this off to mute all reminders on every device.</small></span>
+              </label>
+
+              <fieldset class="setting-group">
+                <legend>Quiet hours</legend>
+                <label class="check-row" for="quiet-enabled">
+                  <input type="checkbox" id="quiet-enabled">
+                  <span><strong>Pause reminders overnight</strong><small>Reminders inside this window are held back.</small></span>
+                </label>
+                <div class="quiet-times">
+                  <label for="quiet-start">From <input type="time" id="quiet-start"></label>
+                  <label for="quiet-end">To <input type="time" id="quiet-end"></label>
+                </div>
+              </fieldset>
+
+              <div class="setting-group">
+                <label for="muted-tags">Muted tags</label>
+                <input id="muted-tags" type="text" placeholder="Meeting, Admin">
+                <p class="field-hint">Comma-separated tags that should never trigger a reminder. Per-task lead time still applies to everything else.</p>
+              </div>
             </section>
 
             <section class="panel" aria-labelledby="data-title">
@@ -185,8 +221,14 @@
                 <span class="data-count" id="data-count">0 tasks</span>
               </div>
               <div class="data-actions">
+                <button class="btn btn-ghost btn-sm" type="button" id="export-json-btn">
+                  <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg> Export all data (JSON)
+                </button>
+                <button class="btn btn-ghost btn-sm" type="button" id="import-btn">
+                  <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg> Import / restore
+                </button>
                 <button class="btn btn-ghost btn-sm" type="button" id="export-btn">
-                  <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg> Export CSV
+                  <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg> Export CSV (summary)
                 </button>
                 <button class="btn btn-ghost btn-sm" type="button" id="clear-completed-btn">
                   <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg> Clear completed
@@ -195,7 +237,15 @@
                   <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg> Reset local data
                 </button>
               </div>
-              <p class="field-hint">Reset restores the demo tasks. Your preferences are kept.</p>
+              <div class="import-options">
+                <label for="import-mode">On import:</label>
+                <select id="import-mode">
+                  <option value="merge">Merge — keep existing data</option>
+                  <option value="replace">Replace — overwrite everything</option>
+                </select>
+                <input type="file" id="import-file" accept="application/json,.json" hidden>
+              </div>
+              <p class="field-hint">JSON export includes tasks, subtasks, focus sessions and preferences, so you can restore everything. CSV is a readable summary only.</p>
             </section>
           </div>
 
@@ -231,6 +281,7 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/a11y.js" defer></script>
   <script src="assets/js/config.js" defer></script>
   <script src="assets/js/supabase.js" defer></script>
   <script src="assets/js/store.js" defer></script>

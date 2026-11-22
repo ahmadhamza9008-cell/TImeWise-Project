@@ -26,7 +26,8 @@ function createSettings(storage) {
     String,
     Number,
     Object,
-    JSON
+    JSON,
+    Intl
   };
   sandbox.window = sandbox;
   vm.createContext(sandbox);
@@ -36,6 +37,20 @@ function createSettings(storage) {
 
 function plain(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function defaults() {
+  return {
+    name: 'Friend',
+    focusMinutes: 25,
+    weekStart: 'monday',
+    theme: 'light',
+    timezone: new Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    pushEnabled: true,
+    quietStart: '',
+    quietEnd: '',
+    mutedTags: []
+  };
 }
 
 const results = [];
@@ -50,7 +65,7 @@ function test(name, fn) {
 
 test('provides sensible defaults', () => {
   const { settings } = createSettings();
-  assert.deepStrictEqual(plain(settings.get()), { name: 'Friend', focusMinutes: 25, weekStart: 'monday', theme: 'light' });
+  assert.deepStrictEqual(plain(settings.get()), defaults());
 });
 
 test('set persists and notifies subscribers', () => {
@@ -82,7 +97,7 @@ test('invalid values fall back to defaults', () => {
 
 test('malformed storage falls back to defaults', () => {
   const { settings } = createSettings(makeStorage({ timewise_settings: '{bad json' }));
-  assert.deepStrictEqual(plain(settings.get()), { name: 'Friend', focusMinutes: 25, weekStart: 'monday', theme: 'light' });
+  assert.deepStrictEqual(plain(settings.get()), defaults());
 });
 
 test('reset restores defaults and notifies', () => {
@@ -92,7 +107,52 @@ test('reset restores defaults and notifies', () => {
   settings.set({ name: 'Someone Else', focusMinutes: 50, weekStart: 'sunday', theme: 'dark' });
   settings.reset();
   assert.strictEqual(calls, 2);
-  assert.deepStrictEqual(plain(settings.get()), { name: 'Friend', focusMinutes: 25, weekStart: 'monday', theme: 'light' });
+  assert.deepStrictEqual(plain(settings.get()), defaults());
+});
+
+test('notification preferences normalize', () => {
+  const { settings } = createSettings();
+  settings.set({
+    timezone: 'Africa/Lagos',
+    pushEnabled: false,
+    quietStart: '22:00',
+    quietEnd: '07:00',
+    mutedTags: ['Meeting', 'Admin']
+  });
+  const value = settings.get();
+  assert.strictEqual(value.timezone, 'Africa/Lagos');
+  assert.strictEqual(value.pushEnabled, false);
+  assert.strictEqual(value.quietStart, '22:00');
+  assert.strictEqual(value.quietEnd, '07:00');
+  assert.deepStrictEqual(value.mutedTags, ['Meeting', 'Admin']);
+});
+
+test('invalid timezone and quiet hours are rejected', () => {
+  const { settings } = createSettings();
+  settings.set({ timezone: 'Mars/Olympus', quietStart: '25:99', quietEnd: null, mutedTags: 'Meeting' });
+  const value = settings.get();
+  assert.strictEqual(value.timezone, defaults().timezone);
+  assert.strictEqual(value.quietStart, '');
+  assert.strictEqual(value.quietEnd, '');
+  assert.deepStrictEqual(plain(value.mutedTags), []);
+});
+
+test('array changes notify subscribers', () => {
+  const { settings } = createSettings();
+  let calls = 0;
+  settings.subscribe(() => { calls++; });
+  settings.set({ mutedTags: ['Work'] });
+  assert.strictEqual(calls, 1);
+  settings.set({ mutedTags: ['Work'] });
+  assert.strictEqual(calls, 1);
+});
+
+test('applyRemote hydrates without changing identity', () => {
+  const { settings } = createSettings();
+  settings.applyRemote({ name: 'Synced', timezone: 'Asia/Tokyo', mutedTags: ['Focus'] });
+  assert.strictEqual(settings.get().name, 'Synced');
+  assert.strictEqual(settings.get().timezone, 'Asia/Tokyo');
+  assert.deepStrictEqual(settings.get().mutedTags, ['Focus']);
 });
 
 const failed = results.filter((result) => !result.ok);

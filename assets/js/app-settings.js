@@ -31,6 +31,13 @@
     var greeting = document.getElementById('greeting');
     if (greeting) {
       var hour = new Date().getHours();
+      try {
+        var parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone: settings.timezone || 'UTC', hour: '2-digit', hourCycle: 'h23'
+        }).formatToParts(new Date());
+        var found = parts.filter(function (part) { return part.type === 'hour'; })[0];
+        if (found) hour = Number(found.value);
+      } catch (e) { /* keep browser-local hour */ }
       var part = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
       greeting.textContent = 'Good ' + part + ', ' + name.split(/\s+/)[0];
     }

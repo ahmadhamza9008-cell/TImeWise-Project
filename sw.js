@@ -1,6 +1,7 @@
 /* TimeWise service worker — offline app shell for the installable PWA. */
 
-const CACHE_NAME = 'timewise-v6';
+const CACHE_NAME = 'timewise-v7';
+const NETWORK_TIMEOUT_MS = 1500;
 
 const CORE_ASSETS = [
   './',
@@ -27,6 +28,7 @@ const CORE_ASSETS = [
   './assets/css/insights.css',
   './assets/css/settings.css',
   './assets/css/notifications.css',
+  './assets/js/a11y.js',
   './assets/js/config.js',
   './assets/js/supabase.js',
   './assets/js/main.js',
@@ -62,10 +64,22 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+function withTimeout(promise, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Network timeout')), ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error) => { clearTimeout(timer); reject(error); }
+    );
+  });
+}
+
 async function networkFirst(request) {
   const cache = await caches.open(CACHE_NAME);
   try {
-    const response = await fetch(request);
+    // Don't make the user wait on a slow or offline network when a cached
+    // shell is available.
+    const response = await withTimeout(fetch(request), NETWORK_TIMEOUT_MS);
     if (response.ok) cache.put(request, response.clone());
     return response;
   } catch (error) {

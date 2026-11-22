@@ -164,7 +164,12 @@ window.TimeWiseBackend = (function () {
       name: row.display_name || 'Friend',
       focusMinutes: Number(row.focus_minutes) === 50 ? 50 : 25,
       weekStart: row.week_start === 'sunday' ? 'sunday' : 'monday',
-      theme: row.theme === 'dark' ? 'dark' : 'light'
+      theme: row.theme === 'dark' ? 'dark' : 'light',
+      timezone: row.timezone || '',
+      pushEnabled: row.push_enabled !== false,
+      quietStart: row.quiet_start || '',
+      quietEnd: row.quiet_end || '',
+      mutedTags: Array.isArray(row.muted_tags) ? row.muted_tags : []
     };
   }
 
@@ -172,7 +177,7 @@ window.TimeWiseBackend = (function () {
     return requireUser().then(function (user) {
       if (!user || !client) return null;
       return client.from('profiles')
-        .select('display_name, focus_minutes, week_start, theme')
+        .select('display_name, focus_minutes, week_start, theme, timezone, push_enabled, quiet_start, quiet_end, muted_tags')
         .eq('id', user.id)
         .maybeSingle();
     }).then(function (result) {
@@ -190,6 +195,11 @@ window.TimeWiseBackend = (function () {
       if (patch.focusMinutes !== undefined) row.focus_minutes = Number(patch.focusMinutes) === 50 ? 50 : 25;
       if (patch.weekStart !== undefined) row.week_start = patch.weekStart === 'sunday' ? 'sunday' : 'monday';
       if (patch.theme !== undefined) row.theme = patch.theme === 'dark' ? 'dark' : 'light';
+      if (patch.timezone !== undefined) row.timezone = String(patch.timezone || 'UTC');
+      if (patch.pushEnabled !== undefined) row.push_enabled = Boolean(patch.pushEnabled);
+      if (patch.quietStart !== undefined) row.quiet_start = String(patch.quietStart || '') || null;
+      if (patch.quietEnd !== undefined) row.quiet_end = String(patch.quietEnd || '') || null;
+      if (patch.mutedTags !== undefined) row.muted_tags = Array.isArray(patch.mutedTags) ? patch.mutedTags : [];
       return client.from('profiles').upsert(row, { onConflict: 'id' }).select().single();
     }).then(function (result) {
       if (!result) return null;
@@ -211,7 +221,7 @@ window.TimeWiseBackend = (function () {
 
   function reminderMinutes(value) {
     var minutes = Number(value);
-    return [0, 5, 10, 15, 30, 60].indexOf(minutes) !== -1 ? minutes : 10;
+    return [-1, 0, 5, 10, 15, 30, 60].indexOf(minutes) !== -1 ? minutes : 10;
   }
 
   function mapSessionFromRow(row) {
@@ -388,7 +398,7 @@ window.TimeWiseBackend = (function () {
         keys: { p256dh: keys.p256dh, auth: keys.auth },
         timezone: timezone || 'UTC'
       };
-      return client.from('push_subscriptions').upsert(row, { onConflict: 'endpoint' }).select().single();
+      return client.from('push_subscriptions').upsert(row, { onConflict: 'user_id,endpoint' }).select().single();
     }).then(function (result) {
       if (result && result.error) throw result.error;
       return result ? result.data : null;
@@ -411,14 +421,23 @@ window.TimeWiseBackend = (function () {
       if (realtimeChannel && realtimeUserId === user.id) return realtimeChannel;
       if (realtimeChannel) client.removeChannel(realtimeChannel);
       realtimeUserId = user.id;
+      function notify(payload) {
+        if (payload && payload.table === 'profiles') {
+          window.dispatchEvent(new CustomEvent('timewise:profile-changed', { detail: payload }));
+        }
+        callback(payload);
+      }
       realtimeChannel = client
-        .channel('timewise-tasks-' + user.id)
+        .channel('timewise-data-' + user.id)
         .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'tasks',
-          filter: 'user_id=eq.' + user.id
-        }, callback)
+          event: '*', schema: 'public', table: 'tasks', filter: 'user_id=eq.' + user.id
+        }, notify)
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'focus_sessions', filter: 'user_id=eq.' + user.id
+        }, notify)
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'profiles', filter: 'id=eq.' + user.id
+        }, notify)
         .subscribe();
       return realtimeChannel;
     }).catch(function (error) {

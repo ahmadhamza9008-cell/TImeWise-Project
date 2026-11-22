@@ -313,6 +313,20 @@
 .task-item:hover .task-delete, .task-delete:focus-visible { opacity: 1; }
 .task-delete:hover { color: #ef4444; }
 .task-delete .icon { width: 16px; height: 16px; }
+.plan-move { display: inline-flex; gap: 2px; }
+.task-move {
+  min-width: 26px; min-height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: .8rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: .65;
+}
+.task-item:hover .task-move, .task-move:focus-visible { opacity: 1; }
+.task-move:hover { color: var(--accent); border-color: var(--accent); }
 .empty-state { text-align: center; padding: 30px 0; color: var(--muted); font-size: .88rem; }
 
 /* Focus timer */
